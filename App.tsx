@@ -22,6 +22,7 @@ import BackgroundEffects from './components/BackgroundEffects';
 import AgreementOverlay from './components/AgreementOverlay';
 import LoadingScreen from './components/LoadingScreen';
 import MeetingMinutesSection from './components/MeetingMinutesSection';
+import MatrixEffect from './components/MatrixEffect';
 import { DataProvider } from './context/DataContext';
 import { ScrollProgress } from './components/ui/ScrollProgress';
 
@@ -41,7 +42,8 @@ const App: React.FC = () => {
       fontSize: 'default',
       highContrast: false,
       reduceMotion: false,
-      dyslexicFont: false
+      dyslexicFont: false,
+      matrixMode: false
     };
   });
 
@@ -134,6 +136,10 @@ const App: React.FC = () => {
     <DataProvider>
       <ScrollProgress />
       {!hasAgreed && <AgreementOverlay onAgree={handleAgreement} />}
+      
+      {/* Matrix Overlay */}
+      {settings.matrixMode && <MatrixEffect />}
+
       <div className={`min-h-screen flex flex-col font-sans overflow-x-hidden transition-colors duration-500 ${settings.theme === 'dark' ? 'bg-[#01041a]' : 'bg-[#F9FAFB]'} ${!hasAgreed ? 'h-screen overflow-hidden filter blur-sm' : ''}`}>
         <Navigation 
           currentPage={currentPage} 
