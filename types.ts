@@ -195,6 +195,7 @@ export interface AppSettings {
   highContrast: boolean;
   reduceMotion: boolean;
   dyslexicFont?: boolean;
+  matrixMode?: boolean;
 }
 
 export interface Notification {
