@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HiveEvent, RegistrationForm, FormField } from '../types';
 import { useData } from '../context/DataContext';
+import { parseMarkdown } from '../utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/Accordion';
 import { Alert, AlertDescription, AlertTitle } from './ui/Alert';
 import { AlertCircle, CheckCircle2, QrCode, Ticket, Download, UploadCloud } from 'lucide-react';
@@ -255,9 +256,11 @@ const EventRegistration: React.FC<EventRegistrationProps> = ({ event, onClose, o
       switch(field.type) {
           case 'description':
               return (
-                  <div key={field.id} className="col-span-full prose dark:prose-invert text-sm text-gray-500 dark:text-gray-400 mb-4 whitespace-pre-wrap bg-gray-50 dark:bg-white/5 p-4 rounded-xl">
-                      {field.content}
-                  </div>
+                  <div 
+                    key={field.id} 
+                    className="col-span-full prose dark:prose-invert text-sm text-gray-500 dark:text-gray-400 mb-4 whitespace-pre-wrap bg-gray-50 dark:bg-white/5 p-4 rounded-xl"
+                    dangerouslySetInnerHTML={{ __html: parseMarkdown(field.content || '') }}
+                  />
               );
           case 'static_image':
               return (
@@ -324,10 +327,7 @@ const EventRegistration: React.FC<EventRegistrationProps> = ({ event, onClose, o
                   </div>
               );
           case 'checkbox':
-              // Handling single checkbox (boolean) vs multiple options
               if (field.options && field.options.length > 0) {
-                  // For multiple options, ideally use array, but for simplicity treating 'options' as check items
-                  // If options has 1 item, it's a simple boolean-like check (e.g. "I agree")
                   return (
                       <div key={field.id} className="col-span-full space-y-2">
                           {field.label && <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">{field.label} {field.required && <span className="text-red-500">*</span>}</label>}
@@ -339,10 +339,8 @@ const EventRegistration: React.FC<EventRegistrationProps> = ({ event, onClose, o
                                           checked={val === opt || (Array.isArray(val) && val.includes(opt))}
                                           onChange={(e) => {
                                               if (field.options?.length === 1) {
-                                                  // Single option behaves like boolean toggle of value
                                                   updateDynamicField(field.id, e.target.checked ? opt : '');
                                               } else {
-                                                  // Multi-select logic would go here, simplified to single select for now or boolean
                                                   updateDynamicField(field.id, e.target.checked ? opt : ''); 
                                               }
                                           }}
@@ -396,6 +394,7 @@ const EventRegistration: React.FC<EventRegistrationProps> = ({ event, onClose, o
       }
   };
 
+  // ... (rest of render logic remains same)
   if (isCompleted && ticketData) {
     return (
       <div className="fixed inset-0 z-[120] bg-hive-blue/90 backdrop-blur-xl flex items-center justify-center p-4">

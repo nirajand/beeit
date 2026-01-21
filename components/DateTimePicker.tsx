@@ -69,13 +69,14 @@ export function DateTimePicker({ date, setDate, className, name }: DateTimePicke
               className
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4 text-hive-gold" />
+            <CalendarIcon className="mr-2 h-4 w-4 text-hive-gold shrink-0" />
             {selectedDateTime ? (
-              <span className="text-hive-blue dark:text-white font-bold">
-                {format(selectedDateTime, "PPP p")}
+              <span className="text-hive-blue dark:text-white font-bold truncate">
+                {/* Shortened date format to prevent truncation on smaller screens: "May 20, 2025 10:00 AM" */}
+                {format(selectedDateTime, "MMM d, yyyy h:mm a")}
               </span>
             ) : (
-              <span className="text-gray-400">Pick a date & time</span>
+              <span className="text-gray-400 truncate">Pick a date & time</span>
             )}
           </Button>
         }

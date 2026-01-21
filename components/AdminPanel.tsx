@@ -1,24 +1,68 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
-import { EventType, HiveEvent, Article, Member, TrainingDoc, MeetingMinute, ContentStatus, FormField, FieldType } from '../types';
+import { EventType, HiveEvent, Article, Member, MeetingMinute, FormField, FieldType } from '../types';
 import { DotBackground } from './ui/DotBackground';
 import { DateTimePicker } from './DateTimePicker';
-import { sanitize } from '../utils';
+import { sanitize, parseMarkdown } from '../utils';
 import { BentoGrid, BentoCard } from './ui/BentoGrid';
 
-const MotionDiv = motion.div as any;
+// --- Login Screen Component ---
+const LoginScreen = ({ onLogin }: { onLogin: (password: string) => void }) => {
+  const [input, setInput] = useState('');
+  const [error, setError] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input === 'admin123') { // Simple frontend gate
+      onLogin(input);
+    } else {
+      setError(true);
+      setTimeout(() => setError(false), 2000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen pt-20 flex items-center justify-center relative overflow-hidden">
+        <DotBackground>
+          <div className="relative z-10 bg-white/80 dark:bg-[#0b1129]/90 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl border border-white/20 max-w-md w-full text-center">
+             <div className="w-24 h-24 bg-gradient-to-br from-hive-gold to-yellow-600 rounded-3xl flex items-center justify-center text-4xl mb-8 shadow-lg text-white mx-auto transform rotate-3 hover:rotate-6 transition-transform">
+                <i className="fa-solid fa-shield-cat"></i>
+             </div>
+             <h1 className="text-3xl font-black text-hive-blue dark:text-white mb-2 font-heading">Restricted Access</h1>
+             <p className="text-gray-500 text-sm mb-8 font-bold uppercase tracking-widest">Admin Authorization Required</p>
+             
+             <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative">
+                    <input 
+                      type="password" 
+                      value={input} 
+                      onChange={(e) => setInput(e.target.value)} 
+                      className={`w-full text-center text-xl tracking-[0.3em] font-bold py-4 bg-gray-50 dark:bg-black/20 border-2 rounded-2xl outline-none transition-all ${error ? 'border-red-500 text-red-500' : 'border-gray-200 dark:border-white/10 focus:border-hive-gold dark:text-white'}`} 
+                      placeholder="••••••" 
+                      autoFocus 
+                    />
+                </div>
+                <button type="submit" className="w-full bg-hive-blue text-white py-4 rounded-2xl font-bold uppercase tracking-widest hover:bg-hive-gold hover:text-hive-blue transition-all shadow-xl hover:shadow-hive-gold/20 text-xs">
+                  Unlock Console
+                </button>
+             </form>
+          </div>
+        </DotBackground>
+    </div>
+  );
+};
 
 // --- Helper Components ---
 
 const ListItem: React.FC<{ title: string, subtitle?: string, status?: string, onDelete: () => void, onEdit?: () => void }> = ({ title, subtitle, status, onDelete, onEdit }) => (
-  <div className="bg-white dark:bg-white/5 p-4 rounded-xl flex justify-between items-center border border-gray-100 dark:border-white/10 mb-3 hover:shadow-md transition-shadow">
+  <div className="bg-white dark:bg-white/5 p-4 rounded-2xl flex justify-between items-center border border-gray-100 dark:border-white/10 mb-3 hover:shadow-lg hover:border-hive-gold/30 transition-all group">
       <div className="flex-1 min-w-0 mr-4">
-          <h4 className="font-bold text-hive-blue dark:text-white truncate">{title}</h4>
+          <h4 className="font-bold text-hive-blue dark:text-white truncate text-sm group-hover:text-hive-gold transition-colors">{title}</h4>
           <div className="flex gap-2 items-center mt-1">
              {status && (
-                <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded tracking-wider ${
+                <span className={`text-[9px] uppercase font-black px-2 py-0.5 rounded tracking-wider ${
                     status === 'published' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 
                     status === 'cancelled' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 
                     status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 
@@ -30,9 +74,9 @@ const ListItem: React.FC<{ title: string, subtitle?: string, status?: string, on
              {subtitle && <p className="text-xs text-gray-500 truncate">{subtitle}</p>}
           </div>
       </div>
-      <div className="flex gap-2 shrink-0">
-          {onEdit && <button onClick={onEdit} className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/10 text-gray-400 hover:text-hive-blue hover:bg-hive-gold transition-all flex items-center justify-center"><i className="fa-solid fa-pen text-xs"></i></button>}
-          <button onClick={onDelete} className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/10 text-gray-400 hover:text-red-600 hover:bg-red-100 transition-all flex items-center justify-center"><i className="fa-solid fa-trash text-xs"></i></button>
+      <div className="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onEdit && <button onClick={onEdit} className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-white/10 text-gray-400 hover:text-hive-blue hover:bg-hive-gold transition-all flex items-center justify-center"><i className="fa-solid fa-pen text-xs"></i></button>}
+          <button onClick={onDelete} className="w-9 h-9 rounded-xl bg-gray-50 dark:bg-white/10 text-gray-400 hover:text-red-600 hover:bg-red-100 transition-all flex items-center justify-center"><i className="fa-solid fa-trash text-xs"></i></button>
       </div>
   </div>
 );
@@ -41,10 +85,10 @@ const Modal: React.FC<{ isOpen: boolean, onClose: () => void, title: string, chi
   <AnimatePresence>
     {isOpen && (
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-        <motion.div initial={{scale:0.95, opacity:0, y: 20}} animate={{scale:1, opacity:1, y: 0}} exit={{scale:0.95, opacity:0, y: 20}} className="bg-white dark:bg-[#0b1129] p-8 rounded-[2.5rem] shadow-2xl w-full max-w-3xl relative z-10 border border-gray-100 dark:border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar">
-           <div className="flex justify-between items-center mb-8 border-b border-gray-100 dark:border-white/5 pb-4">
-               <h2 className="text-3xl font-bold font-heading text-hive-blue dark:text-white">{title}</h2>
+        <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+        <motion.div initial={{scale:0.95, opacity:0, y: 20}} animate={{scale:1, opacity:1, y: 0}} exit={{scale:0.95, opacity:0, y: 20}} className="bg-white dark:bg-[#0b1129] p-8 rounded-[2.5rem] shadow-2xl w-full max-w-4xl relative z-10 border border-gray-100 dark:border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar">
+           <div className="flex justify-between items-center mb-8 border-b border-gray-100 dark:border-white/5 pb-4 sticky top-0 bg-inherit z-20">
+               <h2 className="text-2xl font-black font-heading text-hive-blue dark:text-white">{title}</h2>
                <button onClick={onClose} className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition-all"><i className="fa-solid fa-xmark"></i></button>
            </div>
            {children}
@@ -54,26 +98,139 @@ const Modal: React.FC<{ isOpen: boolean, onClose: () => void, title: string, chi
   </AnimatePresence>
 );
 
-const TextEditorToolbar = ({ onInsert }: { onInsert: (text: string) => void }) => (
-  <div className="flex gap-2 mb-2 p-1 bg-gray-100 dark:bg-white/10 rounded-lg w-fit">
-    <button type="button" onClick={() => onInsert('**bold**')} className="p-1.5 hover:bg-white dark:hover:bg-white/10 rounded text-xs font-bold font-body" title="Bold">B</button>
-    <button type="button" onClick={() => onInsert('*italic*')} className="p-1.5 hover:bg-white dark:hover:bg-white/10 rounded text-xs italic font-body" title="Italic">I</button>
-    <button type="button" onClick={() => onInsert('\n- List item')} className="p-1.5 hover:bg-white dark:hover:bg-white/10 rounded text-xs font-body" title="List"><i className="fa-solid fa-list-ul"></i></button>
-    <button type="button" onClick={() => onInsert('\n# Heading')} className="p-1.5 hover:bg-white dark:hover:bg-white/10 rounded text-xs font-heading font-bold" title="Heading">H1</button>
-  </div>
-);
+const RichTextEditor = ({ 
+  label, 
+  name, 
+  defaultValue, 
+  value, 
+  onChange,
+  required,
+  placeholder
+}: { 
+  label?: string, 
+  name?: string, 
+  defaultValue?: string,
+  value?: string,
+  onChange?: (val: string) => void,
+  required?: boolean,
+  placeholder?: string
+}) => {
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [content, setContent] = useState(value !== undefined ? value : (defaultValue || ''));
+  const hasInitialized = useRef(false);
 
-const PipelineControl = ({ status, onChange }: { status: string, onChange: (s: any) => void }) => {
+  useEffect(() => {
+    if (editorRef.current && !hasInitialized.current) {
+        const initialHTML = parseMarkdown(value !== undefined ? value : (defaultValue || ''));
+        if (editorRef.current.innerHTML !== initialHTML) {
+            editorRef.current.innerHTML = initialHTML;
+        }
+        setContent(initialHTML);
+        hasInitialized.current = true;
+    }
+  }, []);
+
+  const exec = (command: string, arg: string | undefined = undefined) => {
+    document.execCommand(command, false, arg);
+    if (editorRef.current) {
+        const html = editorRef.current.innerHTML;
+        setContent(html);
+        if (onChange) onChange(html);
+        editorRef.current.focus();
+    }
+  };
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+      const html = e.currentTarget.innerHTML;
+      setContent(html);
+      if (onChange) onChange(html);
+  };
+
+  const ToolbarBtn = ({ cmd, arg, icon, title }: any) => (
+    <button 
+      type="button" 
+      onClick={() => exec(cmd, arg)} 
+      className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-white/10 rounded-lg text-xs transition-all text-hive-blue dark:text-white border border-transparent hover:border-gray-200 dark:hover:border-white/10" 
+      title={title}
+    >
+      <i className={`fa-solid ${icon}`}></i>
+    </button>
+  );
+
+  return (
+    <div className="mb-6">
+      {label && (
+          <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2 tracking-wider">
+          {label} {required && <span className="text-red-500">*</span>}
+          </label>
+      )}
+      
+      <div className="border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white dark:bg-white/5 focus-within:ring-2 focus-within:ring-hive-gold transition-all shadow-sm">
+        {/* Toolbar */}
+        <div className="flex flex-wrap gap-1 p-2 bg-gray-50 dark:bg-black/20 border-b border-gray-200 dark:border-white/10">
+           <div className="flex gap-0.5 border-r border-gray-200 dark:border-white/10 pr-2 mr-2">
+              <ToolbarBtn cmd="bold" icon="fa-bold" title="Bold" />
+              <ToolbarBtn cmd="italic" icon="fa-italic" title="Italic" />
+              <ToolbarBtn cmd="underline" icon="fa-underline" title="Underline" />
+           </div>
+           
+           <div className="flex gap-0.5 border-r border-gray-200 dark:border-white/10 pr-2 mr-2">
+              <ToolbarBtn cmd="formatBlock" arg="H3" icon="fa-h3" title="Heading 3" />
+              <ToolbarBtn cmd="formatBlock" arg="H4" icon="fa-h4" title="Heading 4" />
+              <ToolbarBtn cmd="formatBlock" arg="H5" icon="fa-h5" title="Heading 5" />
+           </div>
+
+           <div className="flex gap-0.5 border-r border-gray-200 dark:border-white/10 pr-2 mr-2">
+              <ToolbarBtn cmd="insertUnorderedList" icon="fa-list-ul" title="Bullet List" />
+              <ToolbarBtn cmd="insertOrderedList" icon="fa-list-ol" title="Numbered List" />
+              <ToolbarBtn cmd="indent" icon="fa-indent" title="Indent" />
+              <ToolbarBtn cmd="outdent" icon="fa-outdent" title="Outdent" />
+           </div>
+
+           <div className="flex gap-2 items-center pl-2">
+              <button type="button" onClick={() => { const url = prompt('Enter URL:'); if(url) exec('createLink', url); }} className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-white/10 rounded-lg text-xs"><i className="fa-solid fa-link"></i></button>
+              <div className="relative w-6 h-6 overflow-hidden rounded-full border border-gray-300 shadow-sm cursor-pointer hover:scale-110 transition-transform">
+                 <input type="color" className="absolute inset-0 w-full h-full p-0 border-none opacity-0 cursor-pointer" onChange={(e) => exec('foreColor', e.target.value)} title="Text Color" />
+                 <div className="w-full h-full bg-gradient-to-br from-red-500 via-green-500 to-blue-500"></div>
+              </div>
+           </div>
+        </div>
+        
+        {/* Content Area */}
+        <div 
+          ref={editorRef}
+          className="w-full px-6 py-4 min-h-[300px] outline-none font-body text-sm text-hive-blue dark:text-white overflow-y-auto prose dark:prose-invert max-w-none prose-sm prose-p:leading-relaxed prose-headings:font-heading prose-a:text-hive-gold"
+          contentEditable
+          onInput={handleInput}
+          suppressContentEditableWarning={true}
+          data-placeholder={placeholder}
+        />
+      </div>
+      {name && <input type="hidden" name={name} value={content} />}
+      
+      <style>{`
+        [contenteditable]:empty:before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          pointer-events: none;
+          display: block; 
+        }
+      `}</style>
+    </div>
+  );
+};
+
+const PipelineControl = ({ status, onChange, allowTerminalStates = true }: { status: string, onChange: (s: any) => void, allowTerminalStates?: boolean }) => {
   const stages = ['draft', 'verification', 'approval', 'published'];
   const currentIndex = stages.indexOf(status);
   
-  if (['completed', 'cancelled'].includes(status)) {
+  if (['completed', 'cancelled'].includes(status) && allowTerminalStates) {
       return (
-          <div className="mb-6 bg-gray-50 dark:bg-white/5 p-4 rounded-xl border border-gray-100 dark:border-white/5">
-              <label className="block text-xs font-bold uppercase text-gray-500 mb-2 tracking-widest">Current Status</label>
-              <select value={status} onChange={(e) => onChange(e.target.value)} className="w-full bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold">
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
+          <div className="mb-6 bg-gray-50 dark:bg-white/5 p-6 rounded-3xl border border-gray-100 dark:border-white/5">
+              <label className="block text-xs font-bold uppercase text-gray-500 mb-3 tracking-widest">Event Status</label>
+              <select value={status} onChange={(e) => onChange(e.target.value)} className="w-full bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold shadow-sm">
+                  <option value="draft">Revert to Draft</option>
+                  <option value="published">Re-Publish</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
               </select>
@@ -121,62 +278,111 @@ const PipelineControl = ({ status, onChange }: { status: string, onChange: (s: a
         })}
       </div>
       
-      <div className="pt-4 border-t border-gray-200 dark:border-white/5 flex gap-3">
-          <button type="button" onClick={() => onChange('completed')} className="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 px-4 py-2 rounded-lg transition-colors">Mark Completed</button>
-          <button type="button" onClick={() => onChange('cancelled')} className="text-[10px] uppercase font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300 px-4 py-2 rounded-lg transition-colors">Mark Cancelled</button>
-      </div>
+      {allowTerminalStates && (
+        <div className="pt-4 border-t border-gray-200 dark:border-white/5 flex gap-3">
+            <button type="button" onClick={() => onChange('completed')} className="flex-1 text-[10px] uppercase font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 px-4 py-3 rounded-xl transition-colors border border-blue-100 dark:border-blue-900/30">
+               <i className="fa-solid fa-flag-checkered mr-2"></i> Mark Completed
+            </button>
+            <button type="button" onClick={() => onChange('cancelled')} className="flex-1 text-[10px] uppercase font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300 px-4 py-3 rounded-xl transition-colors border border-red-100 dark:border-red-900/30">
+               <i className="fa-solid fa-ban mr-2"></i> Mark Cancelled
+            </button>
+        </div>
+      )}
     </div>
   );
 };
 
 const InputField = ({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) => (
     <div className="mb-4">
-        <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1 tracking-wider">{label}</label>
+        <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1.5 tracking-wider">{label}</label>
         <input {...props} className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-hive-gold focus:border-transparent outline-none transition-all font-body text-sm text-hive-blue dark:text-white" />
     </div>
 );
 
 const TextAreaField = ({ label, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) => (
     <div className="mb-4">
-        <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1 tracking-wider">{label}</label>
+        <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1.5 tracking-wider">{label}</label>
         <textarea {...props} className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-hive-gold focus:border-transparent outline-none transition-all font-body text-sm resize-none text-hive-blue dark:text-white" />
     </div>
 );
+
+const HybridImageUpload = ({ label, name, defaultValue }: { label: string, name: string, defaultValue?: string }) => {
+    const [preview, setPreview] = useState(defaultValue || '');
+    
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.size > 1024 * 1024 * 8) { // 8MB Limit
+                alert("File too large. Please use an image under 8MB.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (ev.target?.result) setPreview(ev.target.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    return (
+        <div className="mb-6">
+            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2 tracking-wider">{label}</label>
+            <div className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-gray-100 dark:bg-white/10 flex-shrink-0 border border-gray-200 dark:border-white/5">
+                    {preview ? (
+                        <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                            <i className="fa-regular fa-image text-3xl"></i>
+                        </div>
+                    )}
+                </div>
+                <div className="flex-1 w-full space-y-3">
+                    <input type="hidden" name={name} value={preview} />
+                    <InputField label="Image URL" value={preview} onChange={(e) => setPreview(e.target.value)} placeholder="https://..." />
+                    <div className="relative">
+                        <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <button type="button" className="w-full bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors flex items-center justify-center gap-2">
+                            <i className="fa-solid fa-cloud-arrow-up"></i> Upload File
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const EventFormContent = ({ event, PipelineControl }: { event: HiveEvent | null, PipelineControl: any }) => {
   const [status, setStatus] = useState(event?.status || 'draft');
   const [startDate, setStartDate] = useState<Date | undefined>(event ? new Date(event.datetime.start) : undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(event ? new Date(event.datetime.end) : undefined);
   const [regDate, setRegDate] = useState<Date | undefined>(event?.registrationDeadline ? new Date(event.registrationDeadline) : undefined);
-  const [description, setDescription] = useState(event?.description || '');
-
-  const insertText = (text: string) => setDescription(prev => prev + text);
 
   return (
     <>
-      <PipelineControl status={status} onChange={setStatus} />
+      <PipelineControl status={status} onChange={setStatus} allowTerminalStates={true} />
       <input type="hidden" name="status" value={status} />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
          <InputField label="Event Title" name="title" defaultValue={event?.title} required />
          <div>
-            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1 tracking-wider">Event Type</label>
+            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1.5 tracking-wider">Event Type</label>
             <select name="type" defaultValue={event?.type || EventType.Workshop} className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-hive-gold outline-none text-sm font-body text-hive-blue dark:text-white">
                {Object.values(EventType).map(t => <option key={t} value={t}>{t}</option>)}
             </select>
          </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
          <div>
-            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1 tracking-wider">Start Time</label>
+            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1.5 tracking-wider">Start Time</label>
             <DateTimePicker date={startDate} setDate={setStartDate} name="start" />
          </div>
          <div>
-            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1 tracking-wider">End Time</label>
+            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1.5 tracking-wider">End Time</label>
             <DateTimePicker date={endDate} setDate={setEndDate} name="end" />
          </div>
          <div>
-            <label className="block text-[10px] font-bold uppercase text-red-500 mb-1 tracking-wider">Reg. Deadline</label>
+            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1.5 tracking-wider">Reg. Deadline</label>
             <DateTimePicker date={regDate} setDate={setRegDate} name="registrationDeadline" />
          </div>
       </div>
@@ -190,19 +396,13 @@ const EventFormContent = ({ event, PipelineControl }: { event: HiveEvent | null,
       </div>
       <InputField label="Organizers (comma separated)" name="organizers" defaultValue={event?.organizers?.join(', ')} />
       
-      <div>
-         <div className="flex justify-between items-center mb-2">
-            <label className="block text-[10px] font-bold uppercase text-gray-500 tracking-wider">Description</label>
-            <TextEditorToolbar onInsert={insertText} />
-         </div>
-         <textarea 
-            name="description" 
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 h-40 focus:ring-2 focus:ring-hive-gold outline-none font-body text-sm custom-scrollbar text-hive-blue dark:text-white" 
-            required 
-         />
-      </div>
+      <RichTextEditor 
+        label="Description" 
+        name="description" 
+        defaultValue={event?.description} 
+        required 
+        placeholder="Enter event details..."
+      />
     </>
   );
 };
@@ -211,14 +411,14 @@ const MemberFormContent = ({ member, PipelineControl }: { member: Member | null,
   const [status, setStatus] = useState(member?.status || 'draft');
   return (
     <>
-      <PipelineControl status={status} onChange={setStatus} />
+      <PipelineControl status={status} onChange={setStatus} allowTerminalStates={false} />
       <input type="hidden" name="status" value={status} />
       <div className="grid grid-cols-2 gap-6">
         <InputField label="Full Name" name="name" defaultValue={member?.name} required />
         <InputField label="Tenure Year" type="number" name="year" defaultValue={member?.year || new Date().getFullYear()} required />
       </div>
       <InputField label="Role / Position" name="role" defaultValue={member?.role} required />
-      <InputField label="Profile Image URL" name="image" defaultValue={member?.image} />
+      <HybridImageUpload label="Profile Photo" name="image" defaultValue={member?.image} />
       <TextAreaField label="Bio / Message" name="message" defaultValue={member?.message} rows={3} required />
       <InputField label="Journey Steps (comma sep)" name="journey" defaultValue={member?.journey.join(', ')} placeholder="Member, VP, President" />
     </>
@@ -227,24 +427,25 @@ const MemberFormContent = ({ member, PipelineControl }: { member: Member | null,
 
 const ArticleFormContent = ({ article, PipelineControl }: { article: Article | null, PipelineControl: any }) => {
   const [status, setStatus] = useState(article?.status || 'draft');
-  const [content, setContent] = useState(article?.content || '');
   return (
     <>
-      <PipelineControl status={status} onChange={setStatus} />
+      <PipelineControl status={status} onChange={setStatus} allowTerminalStates={false} />
       <input type="hidden" name="status" value={status} />
       <InputField label="Article Title" name="title" defaultValue={article?.title} required />
       <div className="grid grid-cols-2 gap-6">
          <InputField label="Author" name="author" defaultValue={article?.author} required />
          <InputField label="Read Time" name="readTime" defaultValue={article?.readTime} placeholder="5 min read" />
       </div>
-      <InputField label="Cover Image URL" name="image" defaultValue={article?.image} />
+      <HybridImageUpload label="Cover Image" name="image" defaultValue={article?.image} />
       <InputField label="Tags (comma sep)" name="tags" defaultValue={article?.tags.join(', ')} />
       <TextAreaField label="Excerpt" name="excerpt" defaultValue={article?.excerpt} rows={2} required />
-      <div>
-         <label className="block text-[10px] font-bold uppercase text-gray-500 mb-2 tracking-wider">Content</label>
-         <TextEditorToolbar onInsert={(txt) => setContent(prev => prev + txt)} />
-         <textarea name="content" rows={12} value={content} onChange={(e) => setContent(e.target.value)} className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-hive-gold outline-none font-body text-sm whitespace-pre-wrap text-hive-blue dark:text-white" required />
-      </div>
+      <RichTextEditor 
+        label="Content Body" 
+        name="content" 
+        defaultValue={article?.content} 
+        required 
+        placeholder="Write your article here..."
+      />
     </>
   );
 };
@@ -253,7 +454,7 @@ const MinuteFormContent = ({ minute, PipelineControl }: { minute: MeetingMinute 
   const [status, setStatus] = useState(minute?.status || 'draft');
   return (
     <>
-      <PipelineControl status={status} onChange={setStatus} />
+      <PipelineControl status={status} onChange={setStatus} allowTerminalStates={false} />
       <input type="hidden" name="status" value={status} />
       <InputField label="Meeting Title" name="title" defaultValue={minute?.title} required />
       <InputField label="Date" name="date" type="date" defaultValue={minute?.date} required />
@@ -484,6 +685,10 @@ const FormBuilder = ({ events, saveForm, getForm, selectedEventIdProp }: { event
   };
 
   const handleFileUpload = (id: string, file: File) => {
+    if (file.size > 150000) { // ~150KB limit
+        alert("Image too large. Please use an image under 150KB to ensure data persistence.");
+        return;
+    }
     const reader = new FileReader();
     reader.onloadend = () => {
       updateField(id, 'content', reader.result);
@@ -538,9 +743,10 @@ const FormBuilder = ({ events, saveForm, getForm, selectedEventIdProp }: { event
                   )}
                   
                   {field.type === 'description' ? (
-                    <div className="text-sm text-gray-600 dark:text-gray-400 prose dark:prose-invert whitespace-pre-wrap font-body">
-                      {field.content || 'Description text...'}
-                    </div>
+                    <div 
+                      className="text-sm text-gray-600 dark:text-gray-400 prose dark:prose-invert whitespace-pre-wrap font-body"
+                      dangerouslySetInnerHTML={{ __html: parseMarkdown(field.content || 'Description text...') }}
+                    />
                   ) : field.type === 'static_image' ? (
                     <div className="rounded-xl overflow-hidden my-4 border border-gray-100 dark:border-white/10">
                         <img src={field.content || 'https://picsum.photos/800/200'} alt="Form Banner" className="w-full h-auto object-cover max-h-48" />
@@ -577,9 +783,7 @@ const FormBuilder = ({ events, saveForm, getForm, selectedEventIdProp }: { event
             </form>
           </div>
 
-          {/* Right: Builder Tools */}
           <div className="space-y-6">
-            {/* Quick Templates */}
             <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-[2rem] border border-gray-100 dark:border-white/10">
                <h4 className="text-xs font-bold uppercase text-gray-500 mb-4 tracking-widest">Quick Templates</h4>
                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -591,7 +795,6 @@ const FormBuilder = ({ events, saveForm, getForm, selectedEventIdProp }: { event
                </div>
             </div>
 
-            {/* Input Types Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {['text', 'textarea', 'email', 'phone', 'url', 'number', 'select', 'radio', 'checkbox', 'date', 'file'].map((type) => (
                 <button 
@@ -602,7 +805,6 @@ const FormBuilder = ({ events, saveForm, getForm, selectedEventIdProp }: { event
                   + {type}
                 </button>
               ))}
-              {/* Special Fields */}
               <button onClick={() => addField('image')} className="bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-300 text-[10px] font-bold uppercase py-2.5 rounded-xl transition-colors border border-blue-200 dark:border-blue-800 tracking-wide">+ User Image</button>
               <button onClick={() => addField('static_image')} className="bg-pink-100 dark:bg-pink-900/30 hover:bg-pink-200 dark:hover:bg-pink-900/50 text-pink-600 dark:text-pink-300 text-[10px] font-bold uppercase py-2.5 rounded-xl transition-colors border border-pink-200 dark:border-pink-800 tracking-wide">+ Banner</button>
               <button onClick={() => addField('description')} className="bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-600 dark:text-purple-300 text-[10px] font-bold uppercase py-2.5 rounded-xl transition-colors border border-purple-200 dark:border-purple-800 tracking-wide">+ Text Block</button>
@@ -630,11 +832,12 @@ const FormBuilder = ({ events, saveForm, getForm, selectedEventIdProp }: { event
 
                     {field.type === 'description' ? (
                       <div>
-                        <div className="flex justify-between items-center mb-1">
-                            <label className="block text-xs font-bold uppercase text-gray-400 tracking-wide">Instruction Text</label>
-                            <TextEditorToolbar onInsert={(text) => updateField(field.id, 'content', (field.content || '') + text)} />
-                        </div>
-                        <textarea value={field.content || ''} onChange={(e) => updateField(field.id, 'content', e.target.value)} rows={3} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm font-body whitespace-pre-wrap outline-none focus:border-hive-gold" placeholder="Enter description here..." />
+                        <RichTextEditor 
+                          label="Instruction Text" 
+                          value={field.content || ''} 
+                          onChange={(val) => updateField(field.id, 'content', val)} 
+                          placeholder="Enter instructions here..."
+                        />
                       </div>
                     ) : field.type === 'static_image' ? (
                       <div>
@@ -689,137 +892,161 @@ const FormBuilder = ({ events, saveForm, getForm, selectedEventIdProp }: { event
   );
 };
 
-// --- Form Strategy Modal ---
 const FormStrategyModal = ({ isOpen, onClose, eventTitle, onChoice, existingEvents }: { isOpen: boolean, onClose: () => void, eventTitle: string, onChoice: (strategy: 'scratch' | 'clone', sourceId?: string) => void, existingEvents: HiveEvent[] }) => {
-    const [selectedSourceId, setSelectedSourceId] = useState<string>("");
+  const [selectedSource, setSelectedSource] = useState<string>("");
 
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Configure Registration Form">
-            <div className="space-y-8">
-                <p className="text-gray-600 dark:text-gray-300 text-sm font-body">
-                    You've successfully created <strong>{eventTitle}</strong>. How would you like to build its registration form?
-                </p>
+  if (!isOpen) return null;
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Option 1: Scratch */}
-                    <button 
-                        onClick={() => onChoice('scratch')}
-                        className="p-8 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-[2rem] hover:border-hive-gold transition-all group text-left flex flex-col items-center text-center shadow-sm hover:shadow-xl"
-                    >
-                        <div className="w-16 h-16 bg-white dark:bg-white/10 rounded-full flex items-center justify-center mb-4 text-hive-blue dark:text-white text-2xl shadow-md group-hover:scale-110 transition-transform">
-                            <i className="fa-solid fa-pencil"></i>
-                        </div>
-                        <h4 className="font-bold text-hive-blue dark:text-white mb-2 text-lg font-heading">Build from Scratch</h4>
-                        <p className="text-xs text-gray-500 font-body">Start with a blank canvas and add fields manually.</p>
-                    </button>
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Form Configuration Strategy">
+      <div className="space-y-6">
+        <p className="text-gray-600 dark:text-gray-300">
+          How would you like to set up the registration form for <strong>{eventTitle}</strong>?
+        </p>
 
-                    {/* Option 2: Clone */}
-                    <div className="p-8 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-[2rem] flex flex-col items-center text-center shadow-sm">
-                        <div className="w-16 h-16 bg-white dark:bg-white/10 rounded-full flex items-center justify-center mb-4 text-hive-blue dark:text-white text-2xl shadow-md">
-                            <i className="fa-solid fa-copy"></i>
-                        </div>
-                        <h4 className="font-bold text-hive-blue dark:text-white mb-4 text-lg font-heading">Use Existing Template</h4>
-                        <div className="space-y-3 w-full">
-                            <select 
-                                className="w-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-hive-gold outline-none font-body text-hive-blue dark:text-white"
-                                value={selectedSourceId}
-                                onChange={(e) => setSelectedSourceId(e.target.value)}
-                            >
-                                <option value="">-- Select Template --</option>
-                                {existingEvents.map(e => (
-                                    <option key={e.id} value={e.id}>{e.title}</option>
-                                ))}
-                            </select>
-                            <button 
-                                disabled={!selectedSourceId}
-                                onClick={() => onChoice('clone', selectedSourceId)}
-                                className="w-full bg-hive-blue text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:bg-hive-gold hover:text-hive-blue transition-colors shadow-lg"
-                            >
-                                Clone & Edit
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="text-center pt-2">
-                    <button onClick={onClose} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-white underline uppercase tracking-widest">Skip Form Configuration</button>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button 
+            onClick={() => onChoice('scratch')}
+            className="p-6 rounded-2xl border-2 border-gray-100 dark:border-white/10 hover:border-hive-gold hover:bg-hive-gold/5 transition-all text-left group"
+          >
+            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i className="fa-solid fa-wand-magic-sparkles text-xl"></i>
             </div>
-        </Modal>
-    );
+            <h4 className="font-bold text-hive-blue dark:text-white mb-1">Start from Scratch</h4>
+            <p className="text-xs text-gray-500">Build a custom form using the drag-and-drop builder.</p>
+          </button>
+
+          <div 
+            className={`p-6 rounded-2xl border-2 border-gray-100 dark:border-white/10 transition-all text-left group relative ${existingEvents.length === 0 ? 'opacity-50' : 'hover:border-hive-gold hover:bg-hive-gold/5'}`}
+          >
+             {existingEvents.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50 rounded-2xl backdrop-blur-[1px] z-10 pointer-events-none">
+                   <span className="text-xs font-bold bg-gray-200 dark:bg-white/10 px-3 py-1 rounded text-gray-500">No templates available</span>
+                </div>
+             )}
+            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i className="fa-solid fa-copy text-xl"></i>
+            </div>
+            <h4 className="font-bold text-hive-blue dark:text-white mb-3">Clone Existing Form</h4>
+            
+            <div className="flex gap-2">
+                <select 
+                value={selectedSource} 
+                onChange={(e) => setSelectedSource(e.target.value)}
+                className="flex-1 bg-gray-50 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-hive-gold relative z-20 text-hive-blue dark:text-white"
+                disabled={existingEvents.length === 0}
+                >
+                <option value="">Select Source Event</option>
+                {existingEvents.map(e => (
+                    <option key={e.id} value={e.id}>{e.title}</option>
+                ))}
+                </select>
+                <button 
+                    onClick={() => { if(selectedSource) onChoice('clone', selectedSource); }}
+                    disabled={!selectedSource}
+                    className="bg-hive-gold text-hive-blue px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-50 hover:bg-white transition-colors"
+                >
+                    Go
+                </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
 };
 
-const AdminPanel: React.FC = () => {
+const AdminPanel = () => {
   const { 
-    events, addEvent, updateEvent, deleteEvent, 
-    team, addMember, updateMember, deleteMember,
-    articles, addArticle, updateArticle, deleteArticle,
-    meetingMinutes, addMinute, updateMinute, deleteMinute,
+    events, team, articles, meetingMinutes, trainingDocs, 
+    addEvent, updateEvent, deleteEvent,
+    addMember, updateMember, deleteMember,
+    addArticle, updateArticle, deleteArticle,
+    addMinute, updateMinute, deleteMinute,
+    addTrainingDoc, updateTrainingDoc, deleteTrainingDoc,
     bannerConfig, updateBannerConfig,
     saveFormConfig, getFormConfig, cloneFormConfig
   } = useData();
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'events' | 'articles' | 'team' | 'minutes' | 'banner' | 'forms'>('dashboard');
-
-  // --- Modal States ---
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<HiveEvent | null>(null);
-  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState<Member | null>(null);
-  const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
-  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
-  const [isMinuteModalOpen, setIsMinuteModalOpen] = useState(false);
-  const [editingMinute, setEditingMinute] = useState<MeetingMinute | null>(null);
+  const [activeTab, setActiveTab] = useState('events');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
   
   // Form Strategy State
   const [showFormStrategy, setShowFormStrategy] = useState(false);
   const [recentEventId, setRecentEventId] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === 'admin123') setIsAuthenticated(true);
-    else alert('Invalid credentials');
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    setIsModalOpen(true);
   };
 
-  const handleEventSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const formData = new FormData(e.currentTarget);
-      
-      const newEvent: HiveEvent = {
-          id: editingEvent?.id || `evt_${Date.now()}`,
-          title: formData.get('title') as string,
-          type: formData.get('type') as EventType,
-          status: formData.get('status') as any,
-          datetime: {
-              start: formData.get('start') as string || new Date().toISOString(),
-              end: formData.get('end') as string || new Date().toISOString()
-          },
-          registrationDeadline: formData.get('registrationDeadline') as string,
-          location: {
-              name: formData.get('locationName') as string,
-              coordinates: formData.get('locationCoords') as string
-          },
-          capacity: parseInt(formData.get('capacity') as string) || 0,
-          registeredCount: editingEvent?.registeredCount || 0,
-          tags: (formData.get('tags') as string).split(',').map(s => s.trim()).filter(Boolean),
-          image: 'https://picsum.photos/seed/event_new/800/400', // Mock image
-          description: formData.get('description') as string,
-          organizers: (formData.get('organizers') as string).split(',').map(s => s.trim()).filter(Boolean),
-      };
+  const handleAdd = () => {
+    setEditingItem(null);
+    setIsModalOpen(true);
+  };
 
-      if (editingEvent) {
-          updateEvent(newEvent);
-          setIsEventModalOpen(false);
-      } else {
-          addEvent(newEvent);
-          setRecentEventId(newEvent.id);
-          setIsEventModalOpen(false);
-          // Trigger the strategy modal for new events
-          setShowFormStrategy(true);
-      }
-      setEditingEvent(null);
+  const handleClose = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const data: any = Object.fromEntries(formData.entries());
+
+    // Basic type conversion and array handling
+    if (data.tags) data.tags = data.tags.split(',').map((t: string) => t.trim());
+    if (data.organizers) data.organizers = data.organizers.split(',').map((t: string) => t.trim());
+    if (data.attendees) data.attendees = data.attendees.split(',').map((t: string) => t.trim());
+    if (data.agenda) data.agenda = data.agenda.split('\n').filter((t: string) => t.trim());
+    if (data.decisions) data.decisions = data.decisions.split('\n').filter((t: string) => t.trim());
+    if (data.actionItems) data.actionItems = data.actionItems.split('\n').filter((t: string) => t.trim());
+    if (data.journey) data.journey = data.journey.split(',').map((t: string) => t.trim());
+    if (data.capacity) data.capacity = parseInt(data.capacity);
+    if (data.year) data.year = parseInt(data.year);
+
+    // Location handling for events
+    if (activeTab === 'events') {
+        data.location = {
+            name: data.locationName,
+            coordinates: data.locationCoords
+        };
+        data.datetime = {
+            start: data.start,
+            end: data.end
+        };
+        // Preserve ID if editing, else generate
+        data.id = editingItem?.id || `evt_${Date.now()}`;
+        if (!data.registeredCount) data.registeredCount = editingItem?.registeredCount || 0;
+        
+        if (editingItem) {
+            updateEvent(data);
+        } else {
+            addEvent(data);
+            setRecentEventId(data.id);
+            setShowFormStrategy(true); // Trigger strategy modal for new events
+        }
+    } else if (activeTab === 'team') {
+        data.id = editingItem?.id || `mem_${Date.now()}`;
+        if (editingItem) updateMember(data);
+        else addMember(data);
+    } else if (activeTab === 'articles') {
+        data.id = editingItem?.id || `art_${Date.now()}`;
+        if (editingItem) updateArticle(data);
+        else {
+            data.date = new Date().toISOString();
+            addArticle(data);
+        }
+    } else if (activeTab === 'minutes') {
+        data.id = editingItem?.id || `min_${Date.now()}`;
+        if (editingItem) updateMinute(data);
+        else addMinute(data);
+    }
+
+    handleClose();
   };
 
   const handleFormStrategyChoice = (strategy: 'scratch' | 'clone', sourceId?: string) => {
@@ -833,231 +1060,103 @@ const AdminPanel: React.FC = () => {
       setShowFormStrategy(false);
   };
 
-  const handleMemberSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const formData = new FormData(e.currentTarget);
-      
-      const newMember: Member = {
-          id: editingMember?.id || `m_${Date.now()}`,
-          name: formData.get('name') as string,
-          role: formData.get('role') as string,
-          image: formData.get('image') as string || `https://picsum.photos/seed/${Date.now()}/200/200`,
-          message: formData.get('message') as string,
-          year: parseInt(formData.get('year') as string) || new Date().getFullYear(),
-          journey: (formData.get('journey') as string).split(',').map(s => s.trim()).filter(Boolean),
-          status: formData.get('status') as ContentStatus
-      };
-
-      if (editingMember) updateMember(newMember);
-      else addMember(newMember);
-
-      setIsMemberModalOpen(false);
-  };
-
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen pt-20">
-        <DotBackground className="h-[90vh]">
-          <div className="flex flex-col items-center justify-center p-8 bg-white/80 dark:bg-[#0b1129]/90 backdrop-blur-xl rounded-[3rem] shadow-2xl border border-white/20">
-             <div className="w-20 h-20 bg-hive-gold rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-lg text-white">
-                <i className="fa-solid fa-lock"></i>
-             </div>
-             <h1 className="text-2xl font-bold text-hive-blue dark:text-white mb-2 font-heading">Restricted Access</h1>
-             <p className="text-gray-500 text-sm mb-8">Admin authentication required.</p>
-             <form onSubmit={handleLogin} className="w-full max-w-xs">
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full text-center text-2xl tracking-[0.5em] font-bold py-3 bg-transparent border-b-2 border-gray-200 focus:border-hive-gold outline-none transition-colors mb-8" placeholder="••••" autoFocus />
-                <button type="submit" className="w-full bg-hive-blue text-white py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-hive-gold transition-colors text-xs">Unlock Console</button>
-             </form>
-          </div>
-        </DotBackground>
-      </div>
-    );
+    return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
   }
 
-  // New Dashboard Stats Component
-  const DashboardStats = () => (
-     <BentoGrid className="mb-10">
-        <BentoCard 
-           title="Total Events" 
-           description="Active and past ecosystem events" 
-           header={<div className="text-5xl font-black text-hive-blue dark:text-white">{events.length}</div>}
-           icon={<i className="fa-solid fa-calendar-day text-hive-gold text-2xl"></i>}
-           className="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800"
-        />
-        <BentoCard 
-           title="Team Members" 
-           description="Committee hierarchy count" 
-           header={<div className="text-5xl font-black text-hive-blue dark:text-white">{team.length}</div>}
-           icon={<i className="fa-solid fa-users text-green-500 text-2xl"></i>}
-           className="bg-green-50 dark:bg-green-900/10 border-green-100 dark:border-green-800"
-        />
-        <BentoCard 
-           title="Articles Published" 
-           description="Knowledge base entries" 
-           header={<div className="text-5xl font-black text-hive-blue dark:text-white">{articles.length}</div>}
-           icon={<i className="fa-solid fa-newspaper text-purple-500 text-2xl"></i>}
-           className="bg-purple-50 dark:bg-purple-900/10 border-purple-100 dark:border-purple-800 md:col-span-1"
-        />
-     </BentoGrid>
-  );
+  const tabs = [
+    { id: 'events', label: 'Events', icon: 'fa-calendar' },
+    { id: 'team', label: 'Team', icon: 'fa-users' },
+    { id: 'articles', label: 'Articles', icon: 'fa-newspaper' },
+    { id: 'minutes', label: 'Minutes', icon: 'fa-file-signature' },
+    { id: 'banner', label: 'Banner', icon: 'fa-bullhorn' },
+    { id: 'forms', label: 'Forms', icon: 'fa-clipboard-question' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#01041a] pt-24 pb-12 px-4 md:px-8 font-sans transition-colors duration-500">
-       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Sidebar Navigation */}
-          <aside className="lg:col-span-3">
-             <div className="bg-white dark:bg-[#0b1129] rounded-[2rem] p-6 shadow-xl border border-gray-100 dark:border-white/5 sticky top-28">
-                <div className="flex items-center gap-3 mb-8 px-2">
-                   <div className="w-10 h-10 bg-hive-gold rounded-full flex items-center justify-center text-hive-blue font-bold text-xl"><i className="fa-solid fa-cube"></i></div>
-                   <div>
-                      <h2 className="font-bold text-hive-blue dark:text-white leading-none">Admin OS</h2>
-                      <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Online</span>
-                   </div>
+    <div className="pt-32 pb-20 max-w-7xl mx-auto px-6 min-h-screen">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-10">
+            <div>
+                <h1 className="text-4xl font-black text-hive-blue dark:text-white font-heading mb-2">Admin Console</h1>
+                <p className="text-gray-500">Manage content, members, and settings.</p>
+            </div>
+            <div className="flex bg-white dark:bg-white/5 p-1 rounded-xl shadow-sm border border-gray-100 dark:border-white/10 mt-4 md:mt-0 overflow-x-auto max-w-full no-scrollbar">
+                {tabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-hive-blue text-white shadow-md' : 'text-gray-500 hover:text-hive-blue dark:hover:text-white'}`}
+                    >
+                        <i className={`fa-solid ${tab.icon}`}></i> {tab.label}
+                    </button>
+                ))}
+            </div>
+        </div>
+
+        {activeTab === 'banner' && (
+            <BannerForm config={bannerConfig} updateConfig={updateBannerConfig} events={events} />
+        )}
+
+        {activeTab === 'forms' && (
+            <FormBuilder 
+              events={events} 
+              saveForm={saveFormConfig} 
+              getForm={getFormConfig} 
+              selectedEventIdProp={recentEventId || undefined} 
+            />
+        )}
+
+        {['events', 'team', 'articles', 'minutes'].includes(activeTab) && (
+            <div className="bg-gray-50 dark:bg-white/5 rounded-[2.5rem] p-8 border border-gray-100 dark:border-white/5 min-h-[500px]">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-bold text-xl text-hive-blue dark:text-white capitalize">{activeTab} Directory</h3>
+                    <button onClick={handleAdd} className="bg-hive-gold text-hive-blue px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white transition-all shadow-sm">
+                        + Add New
+                    </button>
                 </div>
+
+                <div className="space-y-2">
+                    {activeTab === 'events' && events.map(item => (
+                        <ListItem key={item.id} title={item.title} subtitle={new Date(item.datetime.start).toLocaleDateString()} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteEvent(item.id)} />
+                    ))}
+                    {activeTab === 'team' && team.map(item => (
+                        <ListItem key={item.id} title={item.name} subtitle={item.role} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteMember(item.id)} />
+                    ))}
+                    {activeTab === 'articles' && articles.map(item => (
+                        <ListItem key={item.id} title={item.title} subtitle={item.author} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteArticle(item.id)} />
+                    ))}
+                    {activeTab === 'minutes' && meetingMinutes.map(item => (
+                        <ListItem key={item.id} title={item.title} subtitle={item.date} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteMinute(item.id)} />
+                    ))}
+                </div>
+            </div>
+        )}
+
+        <Modal 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
+            title={`${editingItem ? 'Edit' : 'Add New'} ${activeTab.slice(0, -1)}`}
+        >
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {activeTab === 'events' && <EventFormContent event={editingItem} PipelineControl={PipelineControl} />}
+                {activeTab === 'team' && <MemberFormContent member={editingItem} PipelineControl={PipelineControl} />}
+                {activeTab === 'articles' && <ArticleFormContent article={editingItem} PipelineControl={PipelineControl} />}
+                {activeTab === 'minutes' && <MinuteFormContent minute={editingItem} PipelineControl={PipelineControl} />}
                 
-                <nav className="space-y-2">
-                   {[
-                      { id: 'dashboard', label: 'Overview', icon: 'fa-chart-pie' },
-                      { id: 'banner', label: 'Banner & Alerts', icon: 'fa-bullhorn' },
-                      { id: 'events', label: 'Event Manager', icon: 'fa-calendar-check' },
-                      { id: 'team', label: 'Team Hierarchy', icon: 'fa-users-gear' },
-                      { id: 'articles', label: 'Insights Blog', icon: 'fa-pen-nib' },
-                      { id: 'minutes', label: 'Meeting Logs', icon: 'fa-clipboard-list' },
-                      { id: 'forms', label: 'Form Builder', icon: 'fa-shapes' },
-                   ].map((item) => (
-                      <button 
-                        key={item.id} 
-                        onClick={() => setActiveTab(item.id as any)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${
-                           activeTab === item.id 
-                           ? 'bg-hive-blue text-white shadow-lg shadow-hive-blue/20' 
-                           : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5'
-                        }`}
-                      >
-                         <i className={`fa-solid ${item.icon} w-5`}></i> {item.label}
-                      </button>
-                   ))}
-                   <div className="h-px bg-gray-100 dark:bg-white/10 my-4"></div>
-                   <button onClick={() => setIsAuthenticated(false)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
-                      <i className="fa-solid fa-arrow-right-from-bracket w-5"></i> Logout
-                   </button>
-                </nav>
-             </div>
-          </aside>
+                <div className="pt-6 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3">
+                    <button type="button" onClick={handleClose} className="px-6 py-3 rounded-xl text-gray-500 font-bold text-xs uppercase tracking-wider hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                    <button type="submit" className="px-8 py-3 rounded-xl bg-hive-blue text-white font-bold text-xs uppercase tracking-wider hover:bg-hive-gold hover:text-hive-blue transition-all shadow-lg">Save Changes</button>
+                </div>
+            </form>
+        </Modal>
 
-          {/* Main Content */}
-          <main className="lg:col-span-9">
-             <div className="bg-white/80 dark:bg-[#0b1129]/80 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-10 border border-gray-100 dark:border-white/5 shadow-sm min-h-[80vh]">
-                
-                {activeTab === 'dashboard' && (
-                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                      <h1 className="text-3xl font-black text-hive-blue dark:text-white mb-2 font-heading">System Overview</h1>
-                      <p className="text-gray-500 mb-8">Real-time metrics of the Hive ecosystem.</p>
-                      <DashboardStats />
-                   </div>
-                )}
-
-                {/* Generic List Views for CRUD Modules */}
-                {['events', 'team', 'articles', 'minutes'].includes(activeTab) && (
-                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                      <div className="flex justify-between items-end mb-8">
-                         <div>
-                            <h1 className="text-3xl font-black text-hive-blue dark:text-white capitalize font-heading">{activeTab === 'team' ? 'Hierarchy' : activeTab} Management</h1>
-                            <p className="text-gray-500">Manage your {activeTab} content.</p>
-                         </div>
-                         <button 
-                            onClick={() => {
-                               if(activeTab === 'events') { setEditingEvent(null); setIsEventModalOpen(true); }
-                               if(activeTab === 'team') { setEditingMember(null); setIsMemberModalOpen(true); }
-                               if(activeTab === 'articles') { setEditingArticle(null); setIsArticleModalOpen(true); }
-                               if(activeTab === 'minutes') { setEditingMinute(null); setIsMinuteModalOpen(true); }
-                            }}
-                            className="bg-hive-blue text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-hive-gold hover:text-hive-blue transition-all shadow-lg flex items-center gap-2"
-                         >
-                            <i className="fa-solid fa-plus"></i> Create New
-                         </button>
-                      </div>
-
-                      <div className="space-y-2">
-                         {activeTab === 'events' && events.map(e => <ListItem key={e.id} title={e.title} subtitle={new Date(e.datetime.start).toLocaleDateString()} status={e.status} onDelete={() => deleteEvent(e.id)} onEdit={() => { setEditingEvent(e); setIsEventModalOpen(true); }} />)}
-                         {activeTab === 'team' && team.map(m => <ListItem key={m.id} title={m.name} subtitle={`${m.role} (${m.year})`} status={m.status} onDelete={() => deleteMember(m.id)} onEdit={() => { setEditingMember(m); setIsMemberModalOpen(true); }} />)}
-                         {activeTab === 'articles' && articles.map(a => <ListItem key={a.id} title={a.title} subtitle={a.author} status={a.status} onDelete={() => deleteArticle(a.id)} onEdit={() => { setEditingArticle(a); setIsArticleModalOpen(true); }} />)}
-                         {activeTab === 'minutes' && meetingMinutes.map(m => <ListItem key={m.id} title={m.title} subtitle={new Date(m.date).toLocaleDateString()} status={m.status} onDelete={() => deleteMinute(m.id)} onEdit={() => { setEditingMinute(m); setIsMinuteModalOpen(true); }} />)}
-                      </div>
-                   </div>
-                )}
-
-                {activeTab === 'banner' && (
-                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                      <h1 className="text-3xl font-black text-hive-blue dark:text-white mb-8 font-heading">Banner Configuration</h1>
-                      <BannerForm config={bannerConfig} updateConfig={updateBannerConfig} events={events} />
-                   </div>
-                )}
-
-                {activeTab === 'forms' && (
-                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                      <h1 className="text-3xl font-black text-hive-blue dark:text-white mb-2 font-heading">Form Builder</h1>
-                      <p className="text-gray-500 mb-8">Design dynamic registration forms for events.</p>
-                      <FormBuilder 
-                        events={events} 
-                        saveForm={saveFormConfig} 
-                        getForm={getFormConfig} 
-                        selectedEventIdProp={recentEventId || undefined} 
-                      />
-                   </div>
-                )}
-             </div>
-          </main>
-       </div>
-
-       {/* --- Modals --- */}
-       <Modal isOpen={isEventModalOpen} onClose={() => setIsEventModalOpen(false)} title={editingEvent ? 'Edit Event' : 'New Event'}>
-          <form onSubmit={handleEventSubmit}>
-             <EventFormContent event={editingEvent} PipelineControl={PipelineControl} />
-             <div className="pt-6 border-t border-gray-100 dark:border-white/5 mt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsEventModalOpen(false)} className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancel</button>
-                <button type="submit" className="px-8 py-3 rounded-xl font-bold bg-hive-blue text-white hover:bg-hive-gold hover:text-hive-blue transition-colors shadow-lg">Save Event</button>
-             </div>
-          </form>
-       </Modal>
-
-       <FormStrategyModal 
+        <FormStrategyModal 
           isOpen={showFormStrategy} 
-          onClose={() => setShowFormStrategy(false)}
-          eventTitle={events.find(e => e.id === recentEventId)?.title || "New Event"}
-          onChoice={handleFormStrategyChoice}
+          onClose={() => setShowFormStrategy(false)} 
+          eventTitle={events.find(e => e.id === recentEventId)?.title || "New Event"} 
+          onChoice={handleFormStrategyChoice} 
           existingEvents={events.filter(e => e.id !== recentEventId && getFormConfig(e.id).length > 0)}
-       />
-
-       <Modal isOpen={isMemberModalOpen} onClose={() => setIsMemberModalOpen(false)} title={editingMember ? 'Edit Member' : 'Add Member'}>
-          <form onSubmit={handleMemberSubmit}>
-             <MemberFormContent member={editingMember} PipelineControl={PipelineControl} />
-             <div className="pt-6 border-t border-gray-100 dark:border-white/5 mt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsMemberModalOpen(false)} className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancel</button>
-                <button type="submit" className="px-8 py-3 rounded-xl font-bold bg-hive-blue text-white hover:bg-hive-gold hover:text-hive-blue transition-colors shadow-lg">Save Member</button>
-             </div>
-          </form>
-       </Modal>
-       
-       <Modal isOpen={isArticleModalOpen} onClose={() => setIsArticleModalOpen(false)} title={editingArticle ? 'Edit Article' : 'New Article'}>
-         <form onSubmit={(e) => { e.preventDefault(); /* Mock submit logic */ setIsArticleModalOpen(false); }}>
-            <ArticleFormContent article={editingArticle} PipelineControl={PipelineControl} />
-            <div className="pt-6 border-t border-gray-100 dark:border-white/5 mt-6 flex justify-end gap-3">
-               <button type="button" onClick={() => setIsArticleModalOpen(false)} className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancel</button>
-               <button type="submit" className="px-8 py-3 rounded-xl font-bold bg-hive-blue text-white hover:bg-hive-gold hover:text-hive-blue transition-colors shadow-lg">Save Article</button>
-            </div>
-         </form>
-      </Modal>
-
-      <Modal isOpen={isMinuteModalOpen} onClose={() => setIsMinuteModalOpen(false)} title={editingMinute ? 'Edit Minutes' : 'Log Minutes'}>
-         <form onSubmit={(e) => { e.preventDefault(); /* Mock submit logic */ setIsMinuteModalOpen(false); }}>
-            <MinuteFormContent minute={editingMinute} PipelineControl={PipelineControl} />
-            <div className="pt-6 border-t border-gray-100 dark:border-white/5 mt-6 flex justify-end gap-3">
-               <button type="button" onClick={() => setIsMinuteModalOpen(false)} className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancel</button>
-               <button type="submit" className="px-8 py-3 rounded-xl font-bold bg-hive-blue text-white hover:bg-hive-gold hover:text-hive-blue transition-colors shadow-lg">Save Log</button>
-            </div>
-         </form>
-      </Modal>
+        />
     </div>
   );
 };

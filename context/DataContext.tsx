@@ -170,17 +170,34 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : [];
   });
 
-  useEffect(() => localStorage.setItem('hive_banner_config', JSON.stringify(bannerConfig)), [bannerConfig]);
-  useEffect(() => localStorage.setItem('hive_events', JSON.stringify(events)), [events]);
-  useEffect(() => localStorage.setItem('hive_team', JSON.stringify(team)), [team]);
-  useEffect(() => localStorage.setItem('hive_albums', JSON.stringify(albums)), [albums]);
-  useEffect(() => localStorage.setItem('hive_articles', JSON.stringify(articles)), [articles]);
-  useEffect(() => localStorage.setItem('hive_yearbooks', JSON.stringify(yearbooks)), [yearbooks]);
-  useEffect(() => localStorage.setItem('hive_training', JSON.stringify(trainingDocs)), [trainingDocs]);
-  useEffect(() => localStorage.setItem('hive_minutes', JSON.stringify(meetingMinutes)), [meetingMinutes]);
-  useEffect(() => localStorage.setItem('hive_notifications', JSON.stringify(notifications)), [notifications]);
-  useEffect(() => localStorage.setItem('hive_milestones', JSON.stringify(milestones)), [milestones]);
-  useEffect(() => localStorage.setItem('hive_form_configs', JSON.stringify(formConfigs)), [formConfigs]);
+  // Helper to safely set item in localStorage with quota handling
+  const safeSetItem = (key: string, value: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        console.error(`Storage limit exceeded when saving ${key}. Data not persisted.`);
+        // Optional: Alert the user only if critical data
+        if (key === 'hive_form_configs' || key === 'hive_events') {
+           alert("Storage Limit Reached: Recent changes could not be saved to your browser. Please clear data or use smaller images.");
+        }
+      } else {
+        console.error(`Failed to save ${key} to localStorage`, e);
+      }
+    }
+  };
+
+  useEffect(() => safeSetItem('hive_banner_config', bannerConfig), [bannerConfig]);
+  useEffect(() => safeSetItem('hive_events', events), [events]);
+  useEffect(() => safeSetItem('hive_team', team), [team]);
+  useEffect(() => safeSetItem('hive_albums', albums), [albums]);
+  useEffect(() => safeSetItem('hive_articles', articles), [articles]);
+  useEffect(() => safeSetItem('hive_yearbooks', yearbooks), [yearbooks]);
+  useEffect(() => safeSetItem('hive_training', trainingDocs), [trainingDocs]);
+  useEffect(() => safeSetItem('hive_minutes', meetingMinutes), [meetingMinutes]);
+  useEffect(() => safeSetItem('hive_notifications', notifications), [notifications]);
+  useEffect(() => safeSetItem('hive_milestones', milestones), [milestones]);
+  useEffect(() => safeSetItem('hive_form_configs', formConfigs), [formConfigs]);
 
   // COM-03: Automated Notification Logic
   useEffect(() => {
