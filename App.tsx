@@ -22,7 +22,7 @@ import BackgroundEffects from './components/BackgroundEffects';
 import AgreementOverlay from './components/AgreementOverlay';
 import LoadingScreen from './components/LoadingScreen';
 import MeetingMinutesSection from './components/MeetingMinutesSection';
-import MatrixEffect from './components/MatrixEffect';
+import MatrixEffect from './components/ui/MatrixEffect';
 import { DataProvider } from './context/DataContext';
 import { ScrollProgress } from './components/ui/ScrollProgress';
 
