@@ -235,6 +235,7 @@ export const TEAM: Member[] = [
     role: "President",
     message: "Leading BEE-IT Hive to unprecedented heights with a vision of radical innovation.",
     image: "https://picsum.photos/seed/nirajan/200/200",
+    year: 2025,
     journey: ["General Member", "Event Coordinator", "Vice President", "President"],
     status: 'published'
   },
@@ -244,6 +245,7 @@ export const TEAM: Member[] = [
     role: "Secretary",
     message: "Orchestrating the Hive's internal rhythm and ensuring operational excellence.",
     image: "https://picsum.photos/seed/srijana/200/200",
+    year: 2025,
     journey: ["General Member", "Assistant Secretary", "Secretary"],
     status: 'published'
   },
@@ -253,6 +255,7 @@ export const TEAM: Member[] = [
     role: "Active Member",
     message: "Passionate about building inclusive tech communities and fostering creativity.",
     image: "https://picsum.photos/seed/karina/200/200",
+    year: 2025,
     journey: ["Volunteer", "General Member", "Active Member"],
     status: 'published'
   },
@@ -262,6 +265,7 @@ export const TEAM: Member[] = [
     role: "Active Member",
     message: "Believing in the power of code to solve real-world problems in Pokhara.",
     image: "https://picsum.photos/seed/smriti/200/200",
+    year: 2025,
     journey: ["General Member", "Design Lead", "Active Member"],
     status: 'published'
   },
@@ -271,6 +275,7 @@ export const TEAM: Member[] = [
     role: "Active Member",
     message: "Exploring the intersections of cloud computing and sustainable technology.",
     image: "https://picsum.photos/seed/amrit/200/200",
+    year: 2025,
     journey: ["General Member", "Tech Support", "Active Member"],
     status: 'published'
   },
@@ -280,6 +285,7 @@ export const TEAM: Member[] = [
     role: "Active Member",
     message: "Developing efficient algorithms to power the next generation of GU apps.",
     image: "https://picsum.photos/seed/sabin/200/200",
+    year: 2025,
     journey: ["General Member", "Active Member"],
     status: 'published'
   },
@@ -289,6 +295,7 @@ export const TEAM: Member[] = [
     role: "Active Member",
     message: "Designing human-centric interfaces for our digital community.",
     image: "https://picsum.photos/seed/sujan/200/200",
+    year: 2025,
     journey: ["General Member", "UI/UX Intern", "Active Member"],
     status: 'published'
   },
@@ -298,6 +305,7 @@ export const TEAM: Member[] = [
     role: "Active Member",
     message: "Pushing the boundaries of what BIT students can achieve together.",
     image: "https://picsum.photos/seed/bibek/200/200",
+    year: 2025,
     journey: ["General Member", "Outreach Volunteer", "Active Member"],
     status: 'published'
   },
@@ -307,6 +315,7 @@ export const TEAM: Member[] = [
     role: "Active Member",
     message: "Committed to technical literacy and peer-to-peer mentorship.",
     image: "https://picsum.photos/seed/rajeev/200/200",
+    year: 2025,
     journey: ["General Member", "Active Member"],
     status: 'published'
   },
@@ -316,6 +325,7 @@ export const TEAM: Member[] = [
     role: "Faculty Advisor",
     message: "Empowering students through innovation and academic excellence.",
     image: "https://picsum.photos/seed/saroj/200/200",
+    year: 2025,
     journey: ["Visiting Lecturer", "Lecturer", "Faculty Advisor"],
     status: 'published'
   },
@@ -326,7 +336,28 @@ export const TEAM: Member[] = [
     role: "BIT Program Coordinator",
     message: "Empowering students through innovation and academic excellence.",
     image: "https://picsum.photos/seed/saroj/200/200",
+    year: 2025,
     journey: ["Lecturer", "Assistant Professor", "Program Coordinator"],
+    status: 'published'
+  },
+  {
+    id: "m12",
+    name: "Suman Poudel",
+    role: "President",
+    message: "Empowering students through innovation and academic excellence.",
+    image: "https://picsum.photos/seed/saroj/200/200",
+    year: 2023,
+    journey: ["Founding President"],
+    status: 'published'
+  },
+  {
+    id: "m13",
+    name: "Katrina Basnet",
+    role: "Secretary",
+    message: "Empowering students through innovation and academic excellence.",
+    image: "https://picsum.photos/seed/saroj/200/200",
+    year: 2023,
+    journey: ["Founding Secretary"],
     status: 'published'
   },
 ];

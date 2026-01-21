@@ -54,7 +54,8 @@ export interface Member {
   role: string;
   message: string;
   image: string;
-  journey: string[]; /* Added journey field */
+  year: number; /* Added tenure year */
+  journey: string[]; 
   status: ContentStatus;
 }
 
@@ -67,6 +68,7 @@ export interface HiveEvent {
     start: string;
     end: string;
   };
+  registrationDeadline?: string; // New field
   location: {
     name: string;
     coordinates?: string;
@@ -79,6 +81,23 @@ export interface HiveEvent {
   organizers?: string[];
   resources?: { name: string; type: 'pdf' | 'link'; url: string }[];
   sentNotifications?: ('72h' | '24h' | '1h' | 'cancelled')[];
+}
+
+export type FieldType = 'text' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'file' | 'image' | 'static_image' | 'date' | 'email' | 'number' | 'phone' | 'url' | 'description';
+
+export interface FormField {
+  id: string;
+  type: FieldType;
+  label?: string; // Optional
+  content?: string; // For description text or static image URL
+  placeholder?: string;
+  required: boolean;
+  options?: string[]; // For select, radio, checkbox
+}
+
+export interface EventFormConfig {
+  eventId: string;
+  fields: FormField[];
 }
 
 export interface Comment {

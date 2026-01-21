@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { HiveEvent, Member, GalleryAlbum, Article, TimelineMilestone, TrainingDoc, MeetingMinute, Notification, EventType, Comment, Yearbook, BannerConfig } from '../types';
+import { HiveEvent, Member, GalleryAlbum, Article, TimelineMilestone, TrainingDoc, MeetingMinute, Notification, EventType, Comment, Yearbook, BannerConfig, EventFormConfig, FormField } from '../types';
 import { EVENTS, TEAM, ALBUMS, ARTICLES, MILESTONES, YEARBOOKS } from '../constants';
 
 interface DataContextType {
@@ -51,6 +51,11 @@ interface DataContextType {
   addMilestone: (m: TimelineMilestone) => void;
   updateMilestone: (m: TimelineMilestone) => void;
   deleteMilestone: (id: string) => void;
+
+  // Form Builder
+  saveFormConfig: (eventId: string, fields: FormField[]) => void;
+  getFormConfig: (eventId: string) => FormField[];
+  cloneFormConfig: (sourceEventId: string, targetEventId: string) => void;
 
   // Notifications
   markNotificationAsRead: (id: string) => void;
@@ -160,6 +165,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : MILESTONES;
   });
 
+  const [formConfigs, setFormConfigs] = useState<EventFormConfig[]>(() => {
+    const saved = localStorage.getItem('hive_form_configs');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   useEffect(() => localStorage.setItem('hive_banner_config', JSON.stringify(bannerConfig)), [bannerConfig]);
   useEffect(() => localStorage.setItem('hive_events', JSON.stringify(events)), [events]);
   useEffect(() => localStorage.setItem('hive_team', JSON.stringify(team)), [team]);
@@ -170,6 +180,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => localStorage.setItem('hive_minutes', JSON.stringify(meetingMinutes)), [meetingMinutes]);
   useEffect(() => localStorage.setItem('hive_notifications', JSON.stringify(notifications)), [notifications]);
   useEffect(() => localStorage.setItem('hive_milestones', JSON.stringify(milestones)), [milestones]);
+  useEffect(() => localStorage.setItem('hive_form_configs', JSON.stringify(formConfigs)), [formConfigs]);
 
   // COM-03: Automated Notification Logic
   useEffect(() => {
@@ -327,6 +338,31 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateMilestone = (m: TimelineMilestone) => setMilestones(prev => prev.map(old => old.id === m.id ? m : old).sort((a,b) => a.year - b.year));
   const deleteMilestone = (id: string) => setMilestones(prev => prev.filter(m => m.id !== id));
 
+  // Form Builder Methods
+  const saveFormConfig = (eventId: string, fields: FormField[]) => {
+    setFormConfigs(prev => {
+      const existing = prev.find(c => c.eventId === eventId);
+      if (existing) {
+        return prev.map(c => c.eventId === eventId ? { ...c, fields } : c);
+      } else {
+        return [...prev, { eventId, fields }];
+      }
+    });
+  };
+
+  const getFormConfig = (eventId: string): FormField[] => {
+    return formConfigs.find(c => c.eventId === eventId)?.fields || [];
+  };
+
+  const cloneFormConfig = (sourceEventId: string, targetEventId: string) => {
+    const sourceConfig = formConfigs.find(c => c.eventId === sourceEventId);
+    if (sourceConfig) {
+        // Deep copy the fields to ensure unique instance for the new event
+        const newFields = JSON.parse(JSON.stringify(sourceConfig.fields));
+        saveFormConfig(targetEventId, newFields);
+    }
+  };
+
   // Notification methods
   const markNotificationAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
@@ -359,6 +395,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addMinute, updateMinute, deleteMinute,
       addYearbook, updateYearbook, deleteYearbook,
       addMilestone, updateMilestone, deleteMilestone,
+      saveFormConfig, getFormConfig, cloneFormConfig,
       markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, archiveNotification, clearAllNotifications
     }}>
       {children}

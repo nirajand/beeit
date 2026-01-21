@@ -179,9 +179,15 @@ const MemberFormContent = ({ member, PipelineControl }: { member: Member | null,
       <PipelineControl status={status} onChange={setStatus} />
       <input type="hidden" name="status" value={status} />
 
-      <div>
-         <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Full Name</label>
-         <input name="name" defaultValue={member?.name} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3" required />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+           <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Full Name</label>
+           <input name="name" defaultValue={member?.name} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3" required />
+        </div>
+        <div>
+           <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Tenure Year</label>
+           <input type="number" name="year" defaultValue={member?.year || new Date().getFullYear()} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3" required />
+        </div>
       </div>
       <div>
          <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Role / Position</label>
@@ -481,6 +487,7 @@ const AdminPanel: React.FC = () => {
       role: sanitize(formData.get('role') as string),
       message: sanitize(formData.get('message') as string),
       image: sanitize(formData.get('image') as string) || 'https://picsum.photos/200',
+      year: parseInt(formData.get('year') as string) || new Date().getFullYear(),
       journey: (formData.get('journey') as string).split(',').map(s => sanitize(s.trim())),
       status: formData.get('status') as ContentStatus
     };
@@ -674,7 +681,7 @@ const AdminPanel: React.FC = () => {
                          <button onClick={() => { setEditingMember(null); setIsMemberModalOpen(true); }} className="bg-hive-blue text-white px-6 py-3 rounded-xl font-bold hover:bg-hive-gold hover:text-hive-blue transition-colors">+ New Member</button>
                       </div>
                       <div className="space-y-2">
-                         {team.map(m => <ListItem key={m.id} title={m.name} subtitle={m.role} status={m.status} onDelete={() => deleteMember(m.id)} onEdit={() => { setEditingMember(m); setIsMemberModalOpen(true); }} />)}
+                         {team.map(m => <ListItem key={m.id} title={m.name} subtitle={`${m.role} (${m.year})`} status={m.status} onDelete={() => deleteMember(m.id)} onEdit={() => { setEditingMember(m); setIsMemberModalOpen(true); }} />)}
                       </div>
                    </div>
                 )}

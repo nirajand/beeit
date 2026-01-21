@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { Member, Yearbook } from '../types';
 import { PixelImage } from './ui/PixelImage';
@@ -8,6 +8,19 @@ const TeamSection: React.FC = () => {
   const { team, yearbooks } = useData();
   const [activeMember, setActiveMember] = useState<Member | null>(null);
   const [activeYearbook, setActiveYearbook] = useState<Yearbook | null>(null);
+
+  // Derive available years from team data
+  const availableYears = useMemo(() => {
+    const years = Array.from(new Set(team.map(m => m.year)));
+    return years.sort((a, b) => b - a); // Sort descending (latest first)
+  }, [team]);
+
+  // Default to the latest year if available, otherwise 2025
+  const [selectedYear, setSelectedYear] = useState<number>(availableYears[0] || new Date().getFullYear());
+
+  const filteredTeam = useMemo(() => {
+    return team.filter(m => m.year === selectedYear);
+  }, [team, selectedYear]);
 
   // Reusable SVG Component for Journey Visualization
   const JourneyPath = ({ journey }: { journey: string[] }) => {
@@ -88,65 +101,89 @@ const TeamSection: React.FC = () => {
 
   return (
     <div className="pt-32 pb-20 max-w-7xl mx-auto px-4">
-      <div className="text-center mb-24 animate-in fade-in slide-in-from-top-8 duration-700">
+      <div className="text-center mb-16 animate-in fade-in slide-in-from-top-8 duration-700">
         <h1 className="text-6xl font-bold text-hive-blue dark:text-white mb-6 font-heading">Leadership & Team</h1>
         <p className="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">The collective ambition driving BEE-IT HIVE's community, technical growth, and student success initiatives at Gandaki University.</p>
         
-        {/* Yearbook Triggers */}
-        {yearbooks.length > 0 && (
-          <div className="mt-12 flex flex-wrap justify-center gap-4">
-             {yearbooks.map(yb => (
-               <button 
-                 key={yb.id}
-                 onClick={() => setActiveYearbook(yb)}
-                 className="inline-flex items-center gap-2 bg-hive-gold text-hive-blue px-6 py-3 rounded-2xl font-bold hover:bg-white hover:text-hive-blue transition-all shadow-xl shadow-hive-gold/10 border-2 border-transparent hover:border-hive-blue"
-               >
-                  <i className="fa-solid fa-book-open"></i> {yb.year} Yearbook
-               </button>
-             ))}
-          </div>
-        )}
+        {/* Year Filter & Yearbook Triggers */}
+        <div className="mt-12 flex flex-col items-center gap-6">
+           {/* Year Selector */}
+           <div className="bg-gray-100 dark:bg-white/5 p-1 rounded-xl flex overflow-x-auto max-w-full no-scrollbar">
+              {availableYears.map(year => (
+                <button
+                  key={year}
+                  onClick={() => setSelectedYear(year)}
+                  className={`px-6 py-2 rounded-lg text-xs font-bold uppercase transition-all whitespace-nowrap ${
+                    selectedYear === year 
+                      ? 'bg-white shadow-sm dark:bg-hive-blue text-hive-blue dark:text-white' 
+                      : 'text-gray-500 hover:text-hive-blue dark:hover:text-white'
+                  }`}
+                >
+                  Committee {year}
+                </button>
+              ))}
+           </div>
+
+           {yearbooks.length > 0 && (
+             <div className="flex flex-wrap justify-center gap-4">
+                {yearbooks.map(yb => (
+                  <button 
+                    key={yb.id}
+                    onClick={() => setActiveYearbook(yb)}
+                    className="inline-flex items-center gap-2 bg-hive-gold text-hive-blue px-6 py-3 rounded-2xl font-bold hover:bg-white hover:text-hive-blue transition-all shadow-xl shadow-hive-gold/10 border-2 border-transparent hover:border-hive-blue text-sm"
+                  >
+                     <i className="fa-solid fa-book-open"></i> {yb.year} Yearbook
+                  </button>
+                ))}
+             </div>
+           )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-24">
-        {team.map((member, idx) => (
-          <div 
-            key={member.id} 
-            className="bg-white dark:bg-white/5 rounded-[3.5rem] p-10 border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-2xl transition-all group cursor-pointer animate-in fade-in slide-in-from-bottom-8 duration-500"
-            style={{ animationDelay: `${idx * 150}ms` }}
-            onClick={() => setActiveMember(member)}
-          >
-            <div className="relative mb-8 flex justify-center">
-               <div className="absolute inset-0 bg-hive-gold/10 rounded-full scale-125 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-               
-               <div className="w-48 h-48 rounded-full border-4 border-hive-gold/10 relative z-10 overflow-hidden group-hover:border-hive-gold transition-all duration-500 group-hover:scale-105 bg-gray-200">
-                 {/* Replaced standard img with PixelImage for Magic UI Effect */}
-                 <PixelImage 
-                   src={member.image} 
-                   alt={member.name}
-                   className="w-full h-full"
-                   pixelSize={6}
-                 />
-               </div>
+        {filteredTeam.length > 0 ? (
+          filteredTeam.map((member, idx) => (
+            <div 
+              key={member.id} 
+              className="bg-white dark:bg-white/5 rounded-[3.5rem] p-10 border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-2xl transition-all group cursor-pointer animate-in fade-in slide-in-from-bottom-8 duration-500"
+              style={{ animationDelay: `${idx * 150}ms` }}
+              onClick={() => setActiveMember(member)}
+            >
+              <div className="relative mb-8 flex justify-center">
+                 <div className="absolute inset-0 bg-hive-gold/10 rounded-full scale-125 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                 
+                 <div className="w-48 h-48 rounded-full border-4 border-hive-gold/10 relative z-10 overflow-hidden group-hover:border-hive-gold transition-all duration-500 group-hover:scale-105 bg-gray-200">
+                   <PixelImage 
+                     src={member.image} 
+                     alt={member.name}
+                     className="w-full h-full"
+                     pixelSize={6}
+                   />
+                 </div>
 
-               <div className="absolute bottom-4 right-[20%] bg-white dark:bg-hive-blue text-hive-blue w-14 h-14 rounded-full flex items-center justify-center shadow-2xl z-20 border-4 border-hive-gold/20 font-bold group-hover:rotate-12 transition-transform">
-                  <i className={`fa-solid ${idx === 0 ? 'fa-crown' : idx === 1 ? 'fa-user-tie' : 'fa-shield-halved'} text-hive-gold`}></i>
-               </div>
+                 <div className="absolute bottom-4 right-[20%] bg-white dark:bg-hive-blue text-hive-blue w-14 h-14 rounded-full flex items-center justify-center shadow-2xl z-20 border-4 border-hive-gold/20 font-bold group-hover:rotate-12 transition-transform">
+                    <i className={`fa-solid ${idx === 0 ? 'fa-crown' : idx === 1 ? 'fa-user-tie' : 'fa-shield-halved'} text-hive-gold`}></i>
+                 </div>
+              </div>
+              
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-hive-blue dark:text-white mb-1 group-hover:text-hive-gold transition-colors">{member.name}</h3>
+                <p className="text-gray-400 font-bold uppercase tracking-[0.25em] text-[11px] mb-6">{member.role}</p>
+                <p className="text-gray-600 dark:text-gray-400 italic mb-10 leading-relaxed px-4">"{member.message}"</p>
+                <button 
+                  className="w-full bg-hive-blue text-white py-4 rounded-3xl font-bold hover:bg-hive-gold hover:text-hive-blue transition-all shadow-lg active:scale-95"
+                  onClick={(e) => { e.stopPropagation(); setActiveMember(member); }}
+                >
+                  View Journey Path
+                </button>
+              </div>
             </div>
-            
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-hive-blue dark:text-white mb-1 group-hover:text-hive-gold transition-colors">{member.name}</h3>
-              <p className="text-gray-400 font-bold uppercase tracking-[0.25em] text-[11px] mb-6">{member.role}</p>
-              <p className="text-gray-600 dark:text-gray-400 italic mb-10 leading-relaxed px-4">"{member.message}"</p>
-              <button 
-                className="w-full bg-hive-blue text-white py-4 rounded-3xl font-bold hover:bg-hive-gold hover:text-hive-blue transition-all shadow-lg active:scale-95"
-                onClick={(e) => { e.stopPropagation(); setActiveMember(member); }}
-              >
-                View Journey Path
-              </button>
-            </div>
+          ))
+        ) : (
+          <div className="col-span-1 md:col-span-3 text-center py-20 bg-gray-50 dark:bg-white/5 rounded-[3rem]">
+             <p className="text-gray-400 font-bold uppercase tracking-widest">No members found for {selectedYear}</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* STR-02: Member Journey Visualization Modal */}
@@ -157,7 +194,10 @@ const TeamSection: React.FC = () => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-hive-gold/10 blur-[60px] rounded-full"></div>
                 <img src={activeMember.image} className="w-48 h-48 rounded-full border-4 border-hive-gold mb-8 shadow-2xl" alt={activeMember.name} />
                 <h2 className="text-3xl font-bold">{activeMember.name}</h2>
-                <p className="text-hive-gold font-bold uppercase tracking-widest text-xs mt-3 opacity-80">{activeMember.role}</p>
+                <div className="mt-3">
+                   <span className="text-hive-gold font-bold uppercase tracking-widest text-xs opacity-80 block">{activeMember.role}</span>
+                   <span className="text-white/60 font-mono text-[10px] mt-1 block">Tenure: {activeMember.year}</span>
+                </div>
                 <div className="mt-8 pt-8 border-t border-white/10 w-full">
                   <p className="text-gray-300 italic text-sm leading-relaxed px-6">"{activeMember.message}"</p>
                 </div>
