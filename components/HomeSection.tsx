@@ -20,7 +20,7 @@ interface HomeSectionProps {
 }
 
 const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
-  const { milestones } = useData();
+  const { milestones, articles } = useData();
 
   // Map timeline data for the Timeline component
   const timelineData = milestones.map(milestone => ({
@@ -35,6 +35,12 @@ const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
       </div>
     )
   }));
+
+  // Get latest 3 published articles
+  const latestArticles = articles
+    .filter(a => a.status === 'published')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 3);
 
   const HeroContent = () => (
     <div className="relative z-20 max-w-5xl mx-auto text-center px-4 pt-20">
@@ -101,14 +107,16 @@ const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
         
         {/* Background Image Layer */}
         <div className="absolute inset-0 z-0">
-            <img 
-              src="https://guic.gurcii.edu.np/wp-content/uploads/2024/10/media1712999178.jpg" 
-              alt="Gandaki University" 
-              className="w-full h-full object-cover transition-opacity duration-500"
-            />
-            {/* Subtle Overlay for readability */}
-            <div className="absolute inset-0 bg-white/75 dark:bg-[#030A37]/85 backdrop-blur-[2px]"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent dark:from-[#030A37] dark:via-transparent dark:to-transparent"></div>
+            <BackgroundLines className="bg-transparent h-full w-full">
+              <img 
+                src="https://guic.gurcii.edu.np/wp-content/uploads/2024/10/media1712999178.jpg" 
+                alt="Gandaki University" 
+                className="w-full h-full object-cover transition-opacity duration-500"
+              />
+              {/* Subtle Overlay for readability */}  
+              <div className="absolute inset-0 bg-white/75 dark:bg-[#030A37]/85 backdrop-blur-[2px]"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent dark:from-[#030A37] dark:via-transparent dark:to-transparent"></div>
+            </BackgroundLines>
         </div>
 
         {/* Background Lines Effect */}
@@ -162,6 +170,66 @@ const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
           <div className="h-1 w-20 bg-hive-gold mx-auto rounded-full"></div>
         </div>
         <Timeline data={timelineData} />
+      </section>
+
+      {/* Latest Insights Section */}
+      <section className="py-16 md:py-24 bg-gray-50 dark:bg-[#0b1129]/50 border-y border-gray-100 dark:border-white/5 transition-colors duration-500">
+        <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+                <div>
+                    <h2 className="text-3xl md:text-4xl font-bold text-hive-blue dark:text-white font-heading mb-2">Latest Insights</h2>
+                    <p className="text-gray-500 dark:text-gray-400">Fresh perspectives and technical deep-dives from our community.</p>
+                </div>
+                <Button variant="outline" onClick={() => onPageChange(Page.Articles)} className="hidden md:flex bg-white dark:bg-white/5 hover:bg-hive-gold/10 hover:text-hive-blue border-gray-200 dark:border-white/10">
+                    View All Articles <i className="fa-solid fa-arrow-right ml-2"></i>
+                </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {latestArticles.map((article, idx) => (
+                    <div 
+                        key={article.id}
+                        onClick={() => onPageChange(Page.Articles)}
+                        className="group cursor-pointer flex flex-col gap-4"
+                    >
+                        <div className="aspect-[16/9] rounded-[2rem] overflow-hidden bg-gray-100 dark:bg-white/5 relative border border-gray-100 dark:border-white/5">
+                            <img 
+                                src={article.image} 
+                                alt={article.title} 
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                            <div className="absolute top-4 left-4">
+                                <Badge variant="ghost" className="bg-white/90 dark:bg-black/60 backdrop-blur text-hive-blue dark:text-white font-bold shadow-sm text-[10px] uppercase tracking-wider">
+                                    {article.tags[0]}
+                                </Badge>
+                            </div>
+                        </div>
+                        <div className="px-2">
+                            <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest text-gray-400 mb-2">
+                                <span>{new Date(article.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</span>
+                                <span className="w-1 h-1 rounded-full bg-hive-gold"></span>
+                                <span>{article.readTime}</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-hive-blue dark:text-white leading-tight mb-3 group-hover:text-hive-gold transition-colors font-heading">
+                                {article.title}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                                {article.excerpt}
+                            </p>
+                            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-gray-400 group-hover:text-hive-blue dark:group-hover:text-white transition-colors">
+                                By {article.author}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            
+            <div className="mt-12 md:hidden">
+                <Button variant="outline" onClick={() => onPageChange(Page.Articles)} className="w-full">
+                    View All Articles
+                </Button>
+            </div>
+        </div>
       </section>
 
       {/* Instagram Feed Section */}
