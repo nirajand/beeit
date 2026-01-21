@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
-import { EventType, HiveEvent, Article, Member, MeetingMinute, FormField, FieldType } from '../types';
+import { EventType, HiveEvent, Article, Member, MeetingMinute, FormField, FieldType, TimelineMilestone } from '../types';
 import { DotBackground } from './ui/DotBackground';
 import { DateTimePicker } from './DateTimePicker';
 import { sanitize, parseMarkdown } from '../utils';
@@ -357,11 +357,31 @@ const EventFormContent = ({ event, PipelineControl }: { event: HiveEvent | null,
   const [startDate, setStartDate] = useState<Date | undefined>(event ? new Date(event.datetime.start) : undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(event ? new Date(event.datetime.end) : undefined);
   const [regDate, setRegDate] = useState<Date | undefined>(event?.registrationDeadline ? new Date(event.registrationDeadline) : undefined);
+  const [resources, setResources] = useState<{ name: string; type: 'pdf' | 'link'; url: string }[]>(event?.resources || []);
+
+  const addResource = () => setResources([...resources, { name: '', type: 'link', url: '' }]);
+  const removeResource = (index: number) => setResources(resources.filter((_, i) => i !== index));
+  const updateResource = (index: number, field: string, value: string) => {
+      const newResources = [...resources];
+      newResources[index] = { ...newResources[index], [field]: value } as any;
+      setResources(newResources);
+  };
+
+  const handleResourceUpload = (index: number, file: File) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+          if (ev.target?.result) {
+              updateResource(index, 'url', ev.target.result as string);
+          }
+      };
+      reader.readAsDataURL(file);
+  };
 
   return (
     <>
       <PipelineControl status={status} onChange={setStatus} allowTerminalStates={true} />
       <input type="hidden" name="status" value={status} />
+      <input type="hidden" name="resources" value={JSON.stringify(resources)} />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
          <InputField label="Event Title" name="title" defaultValue={event?.title} required />
@@ -396,6 +416,61 @@ const EventFormContent = ({ event, PipelineControl }: { event: HiveEvent | null,
       </div>
       <InputField label="Organizers (comma separated)" name="organizers" defaultValue={event?.organizers?.join(', ')} />
       
+      {/* Resource Management */}
+      <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-3xl border border-gray-100 dark:border-white/5 mt-2 mb-6">
+         <div className="flex justify-between items-center mb-4">
+            <h4 className="text-xs font-bold uppercase text-gray-500 tracking-widest">Event Resources</h4>
+            <button type="button" onClick={addResource} className="text-xs font-bold text-hive-gold hover:underline uppercase tracking-wide">+ Add Resource</button>
+         </div>
+         {resources.length === 0 && <p className="text-sm text-gray-400 italic">No resources attached.</p>}
+         <div className="space-y-3">
+            {resources.map((res, i) => (
+                <div key={i} className="flex flex-col md:flex-row gap-3 items-start md:items-center bg-white dark:bg-white/10 p-3 rounded-xl border border-gray-100 dark:border-white/5">
+                    <div className="flex-1 w-full">
+                        <input 
+                            value={res.name} 
+                            onChange={e => updateResource(i, 'name', e.target.value)} 
+                            placeholder="Resource Name" 
+                            className="w-full bg-transparent border-b border-gray-200 dark:border-white/10 px-2 py-1 text-sm outline-none focus:border-hive-gold" 
+                        />
+                    </div>
+                    <div className="w-full md:w-32">
+                        <select 
+                            value={res.type} 
+                            onChange={e => updateResource(i, 'type', e.target.value)} 
+                            className="w-full bg-transparent border-b border-gray-200 dark:border-white/10 px-2 py-1 text-sm outline-none focus:border-hive-gold text-hive-blue dark:text-white"
+                        >
+                            <option value="link">Link</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                    <div className="flex-1 w-full flex gap-2">
+                        <input 
+                            value={res.url} 
+                            onChange={e => updateResource(i, 'url', e.target.value)} 
+                            placeholder="URL (https://...)" 
+                            className="w-full bg-transparent border-b border-gray-200 dark:border-white/10 px-2 py-1 text-sm outline-none focus:border-hive-gold" 
+                        />
+                        {res.type === 'pdf' && (
+                            <div className="relative shrink-0">
+                                <input 
+                                    type="file" 
+                                    accept="application/pdf" 
+                                    onChange={(e) => e.target.files?.[0] && handleResourceUpload(i, e.target.files[0])} 
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                                <button type="button" className="p-1 bg-gray-100 dark:bg-white/10 rounded hover:bg-gray-200 dark:hover:bg-white/20 text-gray-500 transition-colors" title="Upload PDF">
+                                    <i className="fa-solid fa-upload"></i>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    <button type="button" onClick={() => removeResource(i)} className="text-red-400 hover:text-red-600 p-2"><i className="fa-solid fa-trash"></i></button>
+                </div>
+            ))}
+         </div>
+      </div>
+
       <RichTextEditor 
         label="Description" 
         name="description" 
@@ -464,6 +539,39 @@ const MinuteFormContent = ({ minute, PipelineControl }: { minute: MeetingMinute 
       <TextAreaField label="Action Items (one per line)" name="actionItems" defaultValue={minute?.actionItems.join('\n')} rows={4} />
     </>
   );
+};
+
+const TimelineFormContent = ({ milestone }: { milestone: TimelineMilestone | null }) => {
+    return (
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <InputField label="Year" type="number" name="year" defaultValue={milestone?.year || new Date().getFullYear()} required />
+           <InputField label="Milestone Title" name="milestone" defaultValue={milestone?.milestone} required />
+        </div>
+        <div>
+            <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1.5 tracking-wider">Category</label>
+            <select name="category" defaultValue={milestone?.category || EventType.Social} className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-hive-gold outline-none text-sm font-body text-hive-blue dark:text-white">
+               {Object.values(EventType).map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+        </div>
+        <TextAreaField label="Summary" name="summary" defaultValue={milestone?.summary} rows={3} required />
+        
+        <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-3xl border border-gray-100 dark:border-white/5 mt-4">
+            <h4 className="text-xs font-bold uppercase text-gray-500 tracking-widest mb-4">Media Attachment</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label className="block text-[10px] font-bold uppercase text-gray-500 mb-1.5 tracking-wider">Media Type</label>
+                    <select name="mediaType" defaultValue={milestone?.media?.type || 'image'} className="w-full bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 outline-none text-sm">
+                        <option value="image">Image</option>
+                        <option value="video">Video</option>
+                    </select>
+                </div>
+                <HybridImageUpload label="Media URL" name="mediaUrl" defaultValue={milestone?.media?.url} />
+            </div>
+            <TextAreaField label="Testimonial (Optional)" name="testimonial" defaultValue={milestone?.media?.testimonial} rows={2} />
+        </div>
+      </>
+    );
 };
 
 const BannerForm = ({ config, updateConfig, events }: { config: any, updateConfig: any, events: HiveEvent[] }) => {
@@ -958,12 +1066,13 @@ const FormStrategyModal = ({ isOpen, onClose, eventTitle, onChoice, existingEven
 
 const AdminPanel = () => {
   const { 
-    events, team, articles, meetingMinutes, trainingDocs, 
+    events, team, articles, meetingMinutes, trainingDocs, milestones,
     addEvent, updateEvent, deleteEvent,
     addMember, updateMember, deleteMember,
     addArticle, updateArticle, deleteArticle,
     addMinute, updateMinute, deleteMinute,
     addTrainingDoc, updateTrainingDoc, deleteTrainingDoc,
+    addMilestone, updateMilestone, deleteMilestone,
     bannerConfig, updateBannerConfig,
     saveFormConfig, getFormConfig, cloneFormConfig
   } = useData();
@@ -972,6 +1081,9 @@ const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('events');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  
+  // Tenure Management State
+  const [adminTeamYear, setAdminTeamYear] = useState<string>('All');
   
   // Form Strategy State
   const [showFormStrategy, setShowFormStrategy] = useState(false);
@@ -1007,6 +1119,29 @@ const AdminPanel = () => {
     if (data.journey) data.journey = data.journey.split(',').map((t: string) => t.trim());
     if (data.capacity) data.capacity = parseInt(data.capacity);
     if (data.year) data.year = parseInt(data.year);
+
+    // Parse Resources JSON
+    if (data.resources) {
+        try {
+            data.resources = JSON.parse(data.resources);
+        } catch (e) {
+            console.error("Failed to parse resources", e);
+            data.resources = [];
+        }
+    }
+
+    // Handle Timeline Specific nested object structure reconstruction
+    if (activeTab === 'timeline') {
+        data.media = {
+            type: data.mediaType,
+            url: data.mediaUrl,
+            testimonial: data.testimonial
+        };
+        // Clean up flat fields
+        delete data.mediaType;
+        delete data.mediaUrl;
+        delete data.testimonial;
+    }
 
     // Location handling for events
     if (activeTab === 'events') {
@@ -1044,6 +1179,10 @@ const AdminPanel = () => {
         data.id = editingItem?.id || `min_${Date.now()}`;
         if (editingItem) updateMinute(data);
         else addMinute(data);
+    } else if (activeTab === 'timeline') {
+        data.id = editingItem?.id || `ms_${Date.now()}`;
+        if (editingItem) updateMilestone(data);
+        else addMilestone(data);
     }
 
     handleClose();
@@ -1069,9 +1208,14 @@ const AdminPanel = () => {
     { id: 'team', label: 'Team', icon: 'fa-users' },
     { id: 'articles', label: 'Articles', icon: 'fa-newspaper' },
     { id: 'minutes', label: 'Minutes', icon: 'fa-file-signature' },
+    { id: 'timeline', label: 'Timeline', icon: 'fa-timeline' },
     { id: 'banner', label: 'Banner', icon: 'fa-bullhorn' },
     { id: 'forms', label: 'Forms', icon: 'fa-clipboard-question' },
   ];
+
+  // Derived state for Team filtering in Admin
+  const teamYears = Array.from(new Set(team.map(m => m.year))).sort((a,b) => b-a);
+  const filteredAdminTeam = adminTeamYear === 'All' ? team : team.filter(m => m.year.toString() === adminTeamYear);
 
   return (
     <div className="pt-32 pb-20 max-w-7xl mx-auto px-6 min-h-screen">
@@ -1106,21 +1250,37 @@ const AdminPanel = () => {
             />
         )}
 
-        {['events', 'team', 'articles', 'minutes'].includes(activeTab) && (
+        {['events', 'team', 'articles', 'minutes', 'timeline'].includes(activeTab) && (
             <div className="bg-gray-50 dark:bg-white/5 rounded-[2.5rem] p-8 border border-gray-100 dark:border-white/5 min-h-[500px]">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-xl text-hive-blue dark:text-white capitalize">{activeTab} Directory</h3>
-                    <button onClick={handleAdd} className="bg-hive-gold text-hive-blue px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white transition-all shadow-sm">
-                        + Add New
-                    </button>
+                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h3 className="font-bold text-xl text-hive-blue dark:text-white capitalize flex items-center gap-2">
+                       {activeTab} Directory 
+                       {activeTab === 'team' && adminTeamYear !== 'All' && <span className="bg-hive-gold text-hive-blue text-[10px] px-2 py-0.5 rounded-full">{adminTeamYear}</span>}
+                    </h3>
+                    
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        {activeTab === 'team' && (
+                            <select 
+                                value={adminTeamYear} 
+                                onChange={(e) => setAdminTeamYear(e.target.value)}
+                                className="bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-hive-gold"
+                            >
+                                <option value="All">All Years</option>
+                                {teamYears.map(y => <option key={y} value={y}>Tenure {y}</option>)}
+                            </select>
+                        )}
+                        <button onClick={handleAdd} className="bg-hive-gold text-hive-blue px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white transition-all shadow-sm whitespace-nowrap flex-1 md:flex-none">
+                            + Add New
+                        </button>
+                    </div>
                 </div>
 
                 <div className="space-y-2">
                     {activeTab === 'events' && events.map(item => (
                         <ListItem key={item.id} title={item.title} subtitle={new Date(item.datetime.start).toLocaleDateString()} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteEvent(item.id)} />
                     ))}
-                    {activeTab === 'team' && team.map(item => (
-                        <ListItem key={item.id} title={item.name} subtitle={item.role} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteMember(item.id)} />
+                    {activeTab === 'team' && filteredAdminTeam.map(item => (
+                        <ListItem key={item.id} title={item.name} subtitle={`${item.role} • ${item.year}`} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteMember(item.id)} />
                     ))}
                     {activeTab === 'articles' && articles.map(item => (
                         <ListItem key={item.id} title={item.title} subtitle={item.author} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteArticle(item.id)} />
@@ -1128,20 +1288,30 @@ const AdminPanel = () => {
                     {activeTab === 'minutes' && meetingMinutes.map(item => (
                         <ListItem key={item.id} title={item.title} subtitle={item.date} status={item.status} onEdit={() => handleEdit(item)} onDelete={() => deleteMinute(item.id)} />
                     ))}
+                    {activeTab === 'timeline' && milestones.map(item => (
+                        <ListItem key={item.id} title={item.milestone} subtitle={`${item.year} • ${item.category}`} onEdit={() => handleEdit(item)} onDelete={() => deleteMilestone(item.id)} />
+                    ))}
                 </div>
+                
+                {activeTab === 'team' && filteredAdminTeam.length === 0 && (
+                    <div className="text-center py-12 text-gray-400 font-bold text-xs uppercase tracking-widest">
+                        No members found for Tenure {adminTeamYear}
+                    </div>
+                )}
             </div>
         )}
 
         <Modal 
             isOpen={isModalOpen} 
             onClose={handleClose} 
-            title={`${editingItem ? 'Edit' : 'Add New'} ${activeTab.slice(0, -1)}`}
+            title={`${editingItem ? 'Edit' : 'Add New'} ${activeTab === 'timeline' ? 'Milestone' : activeTab.slice(0, -1)}`}
         >
             <form onSubmit={handleSubmit} className="space-y-6">
                 {activeTab === 'events' && <EventFormContent event={editingItem} PipelineControl={PipelineControl} />}
                 {activeTab === 'team' && <MemberFormContent member={editingItem} PipelineControl={PipelineControl} />}
                 {activeTab === 'articles' && <ArticleFormContent article={editingItem} PipelineControl={PipelineControl} />}
                 {activeTab === 'minutes' && <MinuteFormContent minute={editingItem} PipelineControl={PipelineControl} />}
+                {activeTab === 'timeline' && <TimelineFormContent milestone={editingItem} />}
                 
                 <div className="pt-6 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3">
                     <button type="button" onClick={handleClose} className="px-6 py-3 rounded-xl text-gray-500 font-bold text-xs uppercase tracking-wider hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">Cancel</button>
