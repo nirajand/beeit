@@ -1,8 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { Member, Yearbook } from '../types';
 import { PixelImage } from './ui/PixelImage';
+import { motion } from 'framer-motion';
 
 const TeamSection: React.FC = () => {
   const { team, yearbooks } = useData();
@@ -12,7 +12,7 @@ const TeamSection: React.FC = () => {
   // Derive available years from team data
   const availableYears = useMemo(() => {
     const years = Array.from(new Set(team.map(m => m.year)));
-    return years.sort((a, b) => b - a);
+    return years.sort((a, b) => (b as number) - (a as number));
   }, [team]);
 
   const [selectedYear, setSelectedYear] = useState<number>(availableYears[0] || new Date().getFullYear());
@@ -72,36 +72,38 @@ const TeamSection: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-20 max-w-7xl mx-auto px-4">
+    <div className="pt-32 pb-20 max-w-7xl mx-auto px-4 min-h-screen">
       <div className="text-center mb-16 animate-in fade-in slide-in-from-top-8 duration-700">
         <h1 className="text-6xl font-bold text-hive-blue dark:text-white mb-6 font-heading">Committee Hierarchy</h1>
         <p className="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">The organizational backbone driving innovation at Gandaki University.</p>
         
-        {/* Year Filter */}
+        {/* Tenure Year Filter */}
         <div className="mt-12 flex flex-col items-center gap-6">
-           <div className="bg-white dark:bg-white/5 p-1 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 flex overflow-x-auto max-w-full no-scrollbar">
+           <div className="flex items-center gap-4 bg-gray-100 dark:bg-white/5 p-1.5 rounded-2xl shadow-inner overflow-x-auto max-w-full no-scrollbar border border-gray-200 dark:border-white/10">
               {availableYears.map(year => (
                 <button
                   key={year}
                   onClick={() => setSelectedYear(year)}
-                  className={`px-8 py-3 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap ${
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
                     selectedYear === year 
-                      ? 'bg-hive-blue text-white shadow-lg' 
-                      : 'text-gray-500 hover:text-hive-blue dark:hover:text-white'
+                      ? 'bg-hive-blue text-white shadow-lg scale-105' 
+                      : 'text-gray-500 hover:text-hive-blue dark:text-gray-400 dark:hover:text-white hover:bg-white dark:hover:bg-white/10'
                   }`}
                 >
+                  {selectedYear === year && <span className="w-2 h-2 bg-hive-gold rounded-full animate-pulse"></span>}
                   Tenure {year}
                 </button>
               ))}
            </div>
 
+           {/* Yearbook Access */}
            {yearbooks.length > 0 && (
              <div className="flex flex-wrap justify-center gap-4">
                 {yearbooks.map(yb => (
                   <button 
                     key={yb.id}
                     onClick={() => setActiveYearbook(yb)}
-                    className="inline-flex items-center gap-2 bg-hive-gold text-hive-blue px-6 py-3 rounded-2xl font-bold hover:bg-white hover:text-hive-blue transition-all shadow-xl shadow-hive-gold/10 border-2 border-transparent hover:border-hive-blue text-sm"
+                    className="inline-flex items-center gap-2 bg-hive-gold/10 text-hive-gold hover:bg-hive-gold hover:text-hive-blue px-6 py-2 rounded-xl font-bold transition-all border border-hive-gold/20 text-xs uppercase tracking-widest"
                   >
                      <i className="fa-solid fa-book-open"></i> {yb.year} Yearbook
                   </button>
@@ -111,43 +113,62 @@ const TeamSection: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
+      {/* Masonry Grid Layout */}
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6 mb-24 px-2">
         {filteredTeam.length > 0 ? (
           filteredTeam.map((member, idx) => (
             <div 
               key={member.id} 
-              className="group bg-white dark:bg-white/5 rounded-[2.5rem] p-8 border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-2xl transition-all cursor-pointer relative overflow-hidden"
-              style={{ animationDelay: `${idx * 100}ms` }}
-              onClick={() => setActiveMember(member)}
+              className="break-inside-avoid mb-6"
             >
-              {/* Card background hover effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-hive-blue/5 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div 
+                className="group bg-white dark:bg-white/5 rounded-[2rem] p-6 border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-2xl transition-all cursor-pointer relative overflow-hidden flex flex-col"
+                onClick={() => setActiveMember(member)}
+              >
+                {/* Card Background Effect */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-hive-blue/5 dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-              <div className="relative mb-6 flex justify-center">
-                 <div className="w-40 h-40 rounded-full border-4 border-white dark:border-[#0b1129] shadow-xl relative z-10 overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                   <PixelImage 
-                     src={member.image} 
-                     alt={member.name}
-                     className="w-full h-full"
-                     pixelSize={4}
-                   />
-                 </div>
-                 {/* Role Icon/Badge */}
-                 <div className="absolute -bottom-2 bg-hive-gold text-hive-blue text-xs font-black uppercase tracking-widest py-1 px-4 rounded-full shadow-lg z-20">
-                    {member.role.split(' ')[0]}
-                 </div>
-              </div>
-              
-              <div className="text-center relative z-10">
-                <h3 className="text-2xl font-bold text-hive-blue dark:text-white mb-2 group-hover:text-hive-gold transition-colors font-heading">{member.name}</h3>
-                <p className="text-gray-500 text-sm italic mb-6 line-clamp-2 px-2">"{member.message}"</p>
-                <button className="text-xs font-bold text-hive-blue dark:text-white uppercase tracking-widest border-b-2 border-hive-gold/30 hover:border-hive-gold transition-all pb-1">View Progression</button>
+                {/* Header: Role & Image */}
+                <div className="flex items-start gap-4 mb-4 relative z-10">
+                   <div className="w-20 h-20 rounded-2xl border-2 border-white dark:border-[#0b1129] shadow-md relative overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-500">
+                     <PixelImage 
+                       src={member.image} 
+                       alt={member.name}
+                       className="w-full h-full"
+                       pixelSize={4}
+                     />
+                   </div>
+                   <div>
+                      <span className="inline-block bg-hive-gold/20 text-hive-gold dark:text-hive-gold text-[9px] font-black uppercase tracking-widest py-1 px-2 rounded-lg mb-1">
+                        {member.role}
+                      </span>
+                      <h3 className="text-xl font-bold text-hive-blue dark:text-white leading-tight font-heading group-hover:text-hive-gold transition-colors">
+                        {member.name}
+                      </h3>
+                   </div>
+                </div>
+                
+                {/* Message Body */}
+                <div className="relative z-10 bg-gray-50 dark:bg-black/20 rounded-xl p-4 mb-4">
+                   <i className="fa-solid fa-quote-left text-hive-gold/30 text-xl absolute top-2 left-2"></i>
+                   <p className="text-gray-600 dark:text-gray-300 text-sm italic leading-relaxed relative z-10 pl-2">
+                     "{member.message}"
+                   </p>
+                </div>
+
+                {/* Footer Action */}
+                <div className="mt-auto relative z-10 flex justify-between items-center border-t border-gray-100 dark:border-white/5 pt-4">
+                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Since {member.year}</span>
+                   <button className="w-8 h-8 rounded-full bg-white dark:bg-white/10 flex items-center justify-center text-hive-blue dark:text-white group-hover:bg-hive-gold transition-colors shadow-sm">
+                      <i className="fa-solid fa-arrow-right -rotate-45 group-hover:rotate-0 transition-transform duration-300"></i>
+                   </button>
+                </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="col-span-1 md:col-span-3 text-center py-20 bg-gray-50 dark:bg-white/5 rounded-[3rem]">
-             <p className="text-gray-400 font-bold uppercase tracking-widest">No members found for {selectedYear}</p>
+          <div className="col-span-full text-center py-20 bg-gray-50 dark:bg-white/5 rounded-[3rem] break-inside-avoid">
+             <p className="text-gray-400 font-bold uppercase tracking-widest">No members found for the tenure year {selectedYear}</p>
           </div>
         )}
       </div>
@@ -157,7 +178,7 @@ const TeamSection: React.FC = () => {
         <div className="fixed inset-0 z-[200] bg-hive-blue/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-[#0b1129] max-w-4xl w-full rounded-[3rem] overflow-hidden shadow-2xl flex flex-col lg:flex-row border border-white/10 max-h-[90vh]">
              <div className="lg:w-2/5 bg-gray-50 dark:bg-black/20 p-12 flex flex-col justify-center items-center text-center relative shrink-0 border-r border-gray-100 dark:border-white/5">
-                <img src={activeMember.image} className="w-40 h-40 rounded-full border-4 border-white shadow-xl mb-6" alt={activeMember.name} />
+                <img src={activeMember.image} className="w-40 h-40 rounded-full border-4 border-white shadow-xl mb-6 object-cover" alt={activeMember.name} />
                 <h2 className="text-3xl font-bold text-hive-blue dark:text-white">{activeMember.name}</h2>
                 <p className="text-hive-gold font-bold uppercase tracking-widest text-xs mt-2">{activeMember.role}</p>
                 <p className="text-gray-500 text-xs mt-1">Tenure: {activeMember.year}</p>
@@ -176,7 +197,7 @@ const TeamSection: React.FC = () => {
         </div>
       )}
 
-      {/* Yearbook Modal (Same logic, slightly refined styling) */}
+      {/* Yearbook Modal */}
       {activeYearbook && (
          <div className="fixed inset-0 z-[250] bg-white dark:bg-[#020515] overflow-y-auto animate-in slide-in-from-bottom-20 duration-500">
             <div className="max-w-7xl mx-auto px-4 py-20 relative">
@@ -186,12 +207,39 @@ const TeamSection: React.FC = () => {
                >
                   <i className="fa-solid fa-xmark text-lg"></i>
                </button>
-               {/* Content ... (Use existing logic) */}
+               
                <div className="text-center mb-16">
                   <h1 className="text-6xl font-black text-hive-blue dark:text-white mb-4">Yearbook {activeYearbook.year}</h1>
                   <span className="bg-hive-gold text-hive-blue px-6 py-2 rounded-full font-bold text-sm uppercase tracking-widest">{activeYearbook.theme}</span>
                </div>
-               {/* ... */}
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
+                  <div className="prose dark:prose-invert max-w-none">
+                     <h3 className="font-heading text-3xl font-bold mb-6">Executive Summary</h3>
+                     <p className="text-lg leading-loose">{activeYearbook.executiveSummary}</p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-white/5 p-8 rounded-3xl">
+                     <h3 className="font-heading text-2xl font-bold mb-6">Tenure Highlights</h3>
+                     <ul className="space-y-4">
+                        {activeYearbook.highlights.map((h, i) => (
+                           <li key={i} className="flex items-start gap-3">
+                              <i className="fa-solid fa-check-circle text-hive-gold mt-1"></i>
+                              <span className="font-bold text-gray-700 dark:text-gray-200">{h}</span>
+                           </li>
+                        ))}
+                     </ul>
+                  </div>
+               </div>
+
+               {activeYearbook.collage && (
+                  <div className="columns-1 md:columns-3 gap-4 space-y-4">
+                     {activeYearbook.collage.map((src, i) => (
+                        <div key={i} className="break-inside-avoid rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-transform">
+                           <img src={src} alt={`Collage ${i}`} className="w-full h-auto" />
+                        </div>
+                     ))}
+                  </div>
+               )}
             </div>
          </div>
       )}
