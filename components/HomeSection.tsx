@@ -140,10 +140,10 @@ const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
       {/* Velocity Scroll Marquee */}
       <div className="py-6 md:py-8 bg-hive-gold/10 dark:bg-hive-blue/20 border-y border-hive-gold/20 backdrop-blur-sm relative z-20">
          <VelocityScroll 
-           text="BEE-IT HIVE • GANDAKI UNIVERSITY • BIT PROGRAM • INNOVATION • COMMUNITY • " 
+           text="BEE-IT HIVE • GANDAKI UNIVERSITY • BIT PROGRAM • INNOVATION • COMMUNITY •" 
            default_velocity={2}
            direction='right'
-           className="text-hive-blue/40 dark:text-white/20 text-2xl md:text-5xl font-black tracking-tighter"
+           className="text-hive-blue/80 dark:text-white/20 text-2xl md:text-5xl font-black tracking-tighter"
          />
       </div>
 
