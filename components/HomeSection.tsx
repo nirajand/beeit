@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useData } from '../context/DataContext';
@@ -22,15 +21,20 @@ interface HomeSectionProps {
 const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
   const { milestones, articles } = useData();
 
-  // Map timeline data for the Timeline component
+  // Map timeline data for the Timeline component with Categories for markers
   const timelineData = milestones.map(milestone => ({
-    title: milestone.year.toString(),
+    year: milestone.year.toString(),
+    title: milestone.milestone,
+    category: milestone.category,
     content: (
       <div>
-        <h3 className="text-xl md:text-2xl font-bold text-hive-blue dark:text-white mb-2 md:mb-3">{milestone.milestone}</h3>
-        <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-3 md:mb-4 text-xs md:text-sm">{milestone.summary}</p>
+        <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-4 text-xs md:text-sm border-l-2 border-gray-200 dark:border-white/10 pl-4">
+          {milestone.summary}
+        </p>
         <div className="flex items-center gap-2">
-           <Badge variant="outline" className="text-[9px] md:text-[10px] uppercase tracking-wider border-gray-200 dark:border-white/20">{milestone.category}</Badge>
+           <Badge variant="outline" className="text-[9px] md:text-[10px] uppercase tracking-wider border-gray-200 dark:border-white/20 font-bold">
+             {milestone.category}
+           </Badge>
         </div>
       </div>
     )
@@ -107,13 +111,13 @@ const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
         
         {/* Background Image Layer */}
         <div className="absolute inset-0 z-0">
-            <BackgroundLines className="bg-transparent h-full w-full">
+            <BackgroundLines className="h-full w-full">
               <img 
                 src="https://guic.gurcii.edu.np/wp-content/uploads/2024/10/media1712999178.jpg" 
                 alt="Gandaki University" 
                 className="w-full h-full object-cover transition-opacity duration-500"
               />
-              {/* Subtle Overlay for readability */}  
+              {/* Subtle Overlay for readability */}
               <div className="absolute inset-0 bg-white/75 dark:bg-[#030A37]/85 backdrop-blur-[2px]"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent dark:from-[#030A37] dark:via-transparent dark:to-transparent"></div>
             </BackgroundLines>
@@ -233,7 +237,7 @@ const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
       </section>
 
       {/* Instagram Feed Section */}
-      <section className="py-16 md:py-20 bg-gray-50 dark:bg-[#020515] border-t border-gray-100 dark:border-white/5">
+      <section className="py-16 md:py-20 bg-white dark:bg-[#020515]">
          <div className="max-w-7xl mx-auto px-6">
             <div className="flex justify-between items-end mb-8 md:mb-12">
                <div>
@@ -269,8 +273,8 @@ const HomeSection: React.FC<HomeSectionProps> = ({ onPageChange }) => {
          </div>
       </section>
 
-      {/* Powered By Section (Moved Up) */}
-      <section className="py-12 bg-white dark:bg-[#020515] border-b border-gray-100 dark:border-white/5 relative z-20 overflow-hidden">
+      {/* Powered By Section */}
+      <section className="py-12 bg-white dark:bg-[#020515] border-t border-gray-100 dark:border-white/5 relative z-20 overflow-hidden">
         <div className="text-center mb-8">
            <p className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Powered By & Built With</p>
         </div>
