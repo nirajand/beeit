@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
@@ -1214,7 +1213,7 @@ const AdminPanel = () => {
   ];
 
   // Derived state for Team filtering in Admin
-  const teamYears = Array.from(new Set(team.map(m => m.year))).sort((a,b) => b-a);
+  const teamYears = Array.from(new Set(team.map(m => m.year))).sort((a,b) => (b as number) - (a as number));
   const filteredAdminTeam = adminTeamYear === 'All' ? team : team.filter(m => m.year.toString() === adminTeamYear);
 
   return (
