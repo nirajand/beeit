@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - BEE-IT HIVE
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -6,64 +6,35 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 jobs:
-  build-and-test:
-    name: Build & Test (Node ${{ matrix.node-version }})
+  build-and-deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20, 22, 24]
-    
+
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18
           cache: 'npm'
 
-      - name: Environment Telemetry
-        run: |
-          echo "Node Version: $(node -v)"
-          echo "NPM Version: $(npm -v)"
+      - name: Install dependencies
+        run: npm install
 
-      - name: Vite Github Pages Deployer
-        uses: skywarth/vite-github-pages-deployer@v1.5.0
-        with:
-          public_base_path: /
-          build_path: ./dist
-          install_phase_node_env: dev
-          build_phase_node_env: production
-          package_manager: npm
-          artifact_name: github-pages-${{ matrix.node-version }}
-          debug_mode: true
-          working_path: ./
+      - name: Build project
+        run: npm run build
 
-  deploy:
-    name: Production Deployment
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Download Node 24 Artifact
-        uses: actions/download-artifact@v4
+      - name: Deploy to deployment branch
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: github-pages-24
-          path: dist/
-
-      - name: Deploy to Branch
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: deploy
-          folder: dist
-          clean: true
-          single-commit: true
-          commit-message: "chore: multi-node verified deployment [skip ci]"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: deployment
+          force_orphan: true     # IMPORTANT → fixes branch issues
+          # disable jekyll so vite assets are served correctly
+          disable_nojekyll: true
