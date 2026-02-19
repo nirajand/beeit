@@ -1,7 +1,7 @@
 
 import { TimelineMilestone, EventType, HiveEvent, Member, GalleryAlbum, Cinematic, Yearbook, Article } from './types';
 
-export const LOGO_URL = "assets/bee-it-upscaled-transparent.png";
+export const LOGO_URL = "/assets/bee-it-upscaled-transparent.png";
 export const COLORS = {
   primary: '#030A37', // Tech Blue
   accent: '#FFAA0D',  // BEE-IT Gold
