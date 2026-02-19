@@ -10,12 +10,15 @@ permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  build:
+    name: Build and Compile
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 10
+    outputs:
+      build_status: ${{ job.status }}
+    
     steps:
-      - name: Checkout Repository
+      - name: Checkout Source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -26,23 +29,59 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Dependency Telemetry
         run: |
-          echo "Starting dependency installation with legacy-peer-deps..."
-          npm install && npm install --legacy-peer-deps
+          echo "System: Checking Node/NPM versions..."
+          node -v
+          npm -v
+          echo "Process: Installing dependencies..."
+          npm install
         shell: bash
 
-      - name: Execute Production Build
+      - name: Build Telemetry
         run: |
-          echo "Initiating Vite production build..."
+          echo "Process: Starting Vite Production Build..."
           npm run build
+          echo "Verification: Checking dist directory content..."
+          ls -R dist/
         shell: bash
 
-      - name: Deploy to Branch
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-assets
+          path: dist/
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Branch
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-assets
+          path: dist/
+
+      - name: Push to Deploy Branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: deploy
           folder: dist
           clean: true
           single-commit: true
-          commit-message: "chore: automated deployment update [skip ci]"
+          commit-message: "chore: deployment update [skip ci]"
+          git-config-name: "BEE-IT HIVE Automation"
+          git-config-email: "bee-it.hive@gandakiuniversity.edu.np"
+
+      - name: Deployment Success Telemetry
+        run: |
+          echo "Status: Deployment to 'deploy' branch completed successfully."
+          echo "Timestamp: $(date)"
+        shell: bash
