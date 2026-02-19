@@ -29,7 +29,7 @@ jobs:
       - name: Install Dependencies
         run: |
           echo "Starting dependency installation with legacy-peer-deps..."
-          npm install --legacy-peer-deps
+          npm install && npm install --legacy-peer-deps
         shell: bash
 
       - name: Execute Production Build
