@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: CI/CD Pipeline - BEE-IT HIVE
 
 on:
   push:
@@ -6,35 +6,60 @@ on:
       - main
   workflow_dispatch:
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+permissions:
+  contents: write
 
-    permissions:
-      contents: write
+jobs:
+  orchestrate-deployment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout source code
+      - name: Checkout Source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Node
+      - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '24'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Initialize Environment & Logs
+        run: |
+          mkdir -p logs
+          echo "Build initialized at $(date)" > logs/system.log
+          echo "Node version: $(node -v)" >> logs/system.log
+          echo "NPM version: $(npm -v)" >> logs/system.log
+        shell: bash
 
-      - name: Build project
-        run: npm run build
+      - name: Install Dependencies
+        run: |
+          echo "Process: Installing dependencies..."
+          npm install >> logs/install.log 2>&1
+        shell: bash
 
-      - name: Deploy to deployment branch
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Development Build Test
+        run: |
+          echo "Process: Running Development Validation..."
+          # Running a trial build in development mode to check for syntax/lint errors
+          NODE_ENV=development npm run build >> logs/dev-test.log 2>&1
+        shell: bash
+
+      - name: Production Build & Telemetry
+        run: |
+          echo "Process: Executing Production Build..."
+          NODE_ENV=production npm run build >> logs/production-build.log 2>&1
+          echo "Telemetry: Mapping distribution structure..."
+          ls -R dist/ > logs/structure.log
+        shell: bash
+
+      - name: Sync and Deploy to Clean Branch
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: deployment
-          force_orphan: true     # IMPORTANT → fixes branch issues
-          # disable jekyll so vite assets are served correctly
-          disable_nojekyll: true
+          branch: deploy
+          folder: . 
+          clean: true
+          single-commit: true
+          commit-message: "deploy: production build and telemetry logs [skip ci]"
