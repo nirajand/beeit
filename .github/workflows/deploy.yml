@@ -1,4 +1,4 @@
-name: BEE-IT HIVE Sample Site Production Deployment Pipeline
+name: BEE-IT HIVE Production Deployment
 
 on:
   push:
@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   orchestrate-deployment:
+    name: Build and Force Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -22,48 +23,43 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Initialize Environment
+      - name: Initialize Node.js Environment
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
 
-      - name: Cleanup & Branch Preparation
+      - name: Branch Reset & Environment Preparation
         run: |
-          echo "Process: Terminating existing deploy branch"
+          echo "Process: Cleaning environment and preparing deploy branch"
           git config --global user.name "BEE-IT HIVE Automation"
           git config --global user.email "bee-it.hive@gandakiuniversity.edu.np"
           
-          # Delete remote deploy branch if it exists
-          git push origin --delete deploy || echo "Branch deploy does not exist on remote"
-          
-          # Create fresh local deploy branch
+          # Remove remote deploy branch to ensure a clean slate every push
+          git push origin --delete deploy || echo "Branch deploy did not exist"
           git checkout -b deploy
         shell: bash
 
-      - name: Infrastructure Setup & Telemetry
+      - name: Infrastructure Installation & Telemetry
         run: |
           mkdir -p logs
           echo "Timestamp: $(date)" > logs/install_telemetry.log
           echo "Node Version: $(node -v)" >> logs/install_telemetry.log
-          
-          echo "Process: Installing dependencies..."
+          echo "Process: Running NPM Install..."
           npm install >> logs/install_telemetry.log 2>&1
         shell: bash
 
-      - name: Development & Build Validation
+      - name: Development Validation
         run: |
-          echo "Process: Running development build test..."
-          # Validates that the vite config and entry points are functional
+          echo "Process: Running development-mode build test..."
           npx vite build --mode development >> logs/dev_test_telemetry.log 2>&1
         shell: bash
 
-      - name: Production Build & Component Compilation
+      - name: Production Compilation
         run: |
-          echo "Process: Initiating final production compilation..."
+          echo "Process: Executing final production build..."
           npm run build >> logs/production_build.log 2>&1
-          
-          echo "Process: Generating File Tree Telemetry..."
+          echo "Process: Cataloging build structure..."
           ls -R dist/ > logs/structure_telemetry.log
         shell: bash
 
@@ -75,18 +71,18 @@ jobs:
           artifact_name: github-pages
           debug_mode: true
 
-      - name: Finalize Deploy Branch & Logs
+      - name: Synchronize Build & Telemetry to Deploy Branch
         run: |
-          # Move logs into the deployment context
+          # Integrate telemetry into production directory
           cp -r logs/ dist/logs/
           
-          # Force push the build and logs to the fresh deploy branch
+          # Initialize and force push the distribution folder
           cd dist
           git init
           git config --global user.name "BEE-IT HIVE Automation"
           git config --global user.email "bee-it.hive@gandakiuniversity.edu.np"
           git checkout -b deploy
           git add .
-          git commit -m "deploy: production build with full telemetry [skip ci]"
+          git commit -m "deploy: stable production build - $(date +'%Y-%m-%d %H:%M:%S') [skip ci]"
           git push --force "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" deploy
         shell: bash
