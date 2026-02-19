@@ -1,0 +1,9 @@
+Timestamp: Thu Feb 19 14:58:12 UTC 2026
+Node Version: v24.13.0
+
+added 103 packages, and audited 104 packages in 8s
+
+17 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities

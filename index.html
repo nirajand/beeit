@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BEE-IT HIVE | Gandaki University</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="icon" type="image/x-icon" href="/frontend-sample/assets/favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/frontend-sample/assets/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicons/favicon-64x64.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/frontend-sample/assets/favicons/apple-touch-icon.png">
+    <link rel="manifest" href="/frontend-sample/assets/favicons/site.webmanifest">
+
+    <meta name="theme-color" content="#030A37">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Red+Hat+Display:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro&family=Roboto:wght@400;500;700&family=Podkova:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/react-calendar@5.0.0/dist/Calendar.css" />
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'hive-blue': '#030A37',
+              'hive-gold': '#FFAA0D',
+              'hive-light-gold': '#E8B723',
+              'neutral-gray': '#C5D3D9',
+              'hive-glow': '#DB3069',
+              'secondary-blue': '#142B73',
+              border: "hsl(var(--border))",
+              input: "hsl(var(--input))",
+              ring: "hsl(var(--ring))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: {
+                DEFAULT: "hsl(var(--primary))",
+                foreground: "hsl(var(--primary-foreground))",
+              },
+              secondary: {
+                DEFAULT: "hsl(var(--secondary))",
+                foreground: "hsl(var(--secondary-foreground))",
+              },
+              destructive: {
+                DEFAULT: "hsl(var(--destructive))",
+                foreground: "hsl(var(--destructive-foreground))",
+              },
+              muted: {
+                DEFAULT: "hsl(var(--muted))",
+                foreground: "hsl(var(--muted-foreground))",
+              },
+              accent: {
+                DEFAULT: "hsl(var(--accent))",
+                foreground: "hsl(var(--accent-foreground))",
+              },
+              popover: {
+                DEFAULT: "hsl(var(--popover))",
+                foreground: "hsl(var(--popover-foreground))",
+              },
+              card: {
+                DEFAULT: "hsl(var(--card))",
+                foreground: "hsl(var(--card-foreground))",
+              },
+            },
+            fontFamily: {
+              'heading': ['"Sanvito Pro"', '"Podkova"', 'serif'],
+              'body': ['"Space Grotesk"', '"Montserrat"', '"Red Hat Display"', 'sans-serif'],
+              'brand-uni': ['"Roboto"', 'sans-serif'],
+              'code': ['"Google Sans Code"', '"Source Code Pro"', 'monospace'],
+            },
+            fontSize: {
+              // Customized scale for better readability
+              'xs': ['0.75rem', { lineHeight: '1.5' }],
+              'sm': ['0.875rem', { lineHeight: '1.6' }],
+              'base': ['1rem', { lineHeight: '1.75' }],
+              'lg': ['1.125rem', { lineHeight: '1.75' }],
+              'xl': ['1.25rem', { lineHeight: '1.8' }],
+              '2xl': ['1.5rem', { lineHeight: '2rem' }],
+              '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+              '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+              '5xl': ['3rem', { lineHeight: '1.1' }],
+              '6xl': ['3.75rem', { lineHeight: '1.1' }],
+              '7xl': ['4.5rem', { lineHeight: '1.1' }],
+              '8xl': ['6rem', { lineHeight: '1' }],
+              '9xl': ['8rem', { lineHeight: '1' }],
+              
+              // Custom Brand Sizes (Deprecated in favor of standard utility scale, keeping for back-compat)
+              'brand-h1': ['2.5rem', { lineHeight: '1.1' }],
+              'brand-h1-mobile': ['2rem', { lineHeight: '1.2' }],
+              'brand-h2': ['2rem', { lineHeight: '1.25' }],
+              'brand-h2-mobile': ['1.75rem', { lineHeight: '1.25' }],
+              'brand-h3': ['1.5rem', { lineHeight: '1.4' }],
+              'brand-h3-mobile': ['1.25rem', { lineHeight: '1.4' }],
+              'brand-body': ['1.125rem', { lineHeight: '1.8' }],
+              'brand-body-mobile': ['1rem', { lineHeight: '1.75' }],
+              'brand-caption': ['0.9rem', { lineHeight: '1.6' }],
+              'brand-caption-mobile': ['0.85rem', { lineHeight: '1.6' }],
+            },
+            animation: {
+              'shimmer': 'shimmer 2s linear infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'bee-pulse': 'bee-pulse 3s ease-in-out infinite',
+              'flap-l': 'flapL 0.1s infinite',
+              'flap-r': 'flapR 0.1s infinite',
+              'grid-flow': 'grid 15s linear infinite',
+              'meteor': 'meteor 5s linear infinite',
+              'rainbow': 'rainbow 3s ease infinite',
+            },
+            keyframes: {
+              shimmer: {
+                from: { backgroundPosition: '0 0' },
+                to: { backgroundPosition: '-200% 0' },
+              },
+              rainbow: {
+                '0%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+                '100%': { backgroundPosition: '0% 50%' },
+              },
+              'bee-pulse': {
+                '0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 20px rgba(255, 170, 13, 0.4)' },
+                '50%': { transform: 'scale(1.05)', boxShadow: '0 0 35px rgba(255, 170, 13, 0.6)' },
+              },
+              flapL: {
+                '0%': { transform: 'rotate(30deg) scaleY(1)' },
+                '50%': { transform: 'rotate(30deg) scaleY(0.5)' },
+                '100%': { transform: 'rotate(30deg) scaleY(1)' },
+              },
+              flapR: {
+                '0%': { transform: 'rotate(-30deg) scaleY(1)' },
+                '50%': { transform: 'rotate(-30deg) scaleY(0.5)' },
+                '100%': { transform: 'rotate(-30deg) scaleY(1)' },
+              },
+              grid: {
+                '0%': { transform: 'translateY(-50%)' },
+                '100%': { transform: 'translateY(0)' },
+              },
+              meteor: {
+                '0%': { transform: 'rotate(215deg) translateX(0)', opacity: '1' },
+                '70%': { opacity: '1' },
+                '100%': { transform: 'rotate(215deg) translateX(-500px)', opacity: '0' },
+              },
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      :root {
+        --hive-blue: #030A37;
+        --hive-gold: #FFAA0D;
+        --hive-light-gold: #E8B723;
+        --neutral-gray: #C5D3D9;
+        --light-bg: #F9FAFB;
+        --hive-glow: #DB3069;
+        --radius: 0.5rem;
+        
+        --background: 210 40% 98%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 221.2 83.2% 53.3%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 221.2 83.2% 53.3%;
+      }
+
+      .dark {
+        --light-bg: #01041a;
+        --hive-blue: #ffffff;
+        
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 217.2 91.2% 59.8%;
+        --primary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 224.3 76.3% 48%;
+      }
+
+      body {
+        font-family: 'Space Grotesk', sans-serif;
+        background-color: var(--light-bg);
+        color: var(--hive-blue);
+        overflow-x: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        /* Improved Readability Base Styles */
+        font-size: 1rem;
+        line-height: 1.75;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      
+      @media (min-width: 640px) {
+        body {
+          font-size: 1.125rem; /* Larger base font for tablet/desktop */
+        }
+      }
+      
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Sanvito Pro', 'Podkova', serif;
+        font-weight: 700;
+        line-height: 1.25;
+        margin-bottom: 0.5em;
+      }
+      
+      p {
+        margin-bottom: 1.25em;
+      }
+
+      /* Brand Scrollbar */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #C5D3D9;
+        border-radius: 99px;
+        border: 2px solid var(--light-bg);
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--hive-gold);
+      }
+
+      .dark ::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15);
+        border-color: #01041a;
+      }
+
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: var(--hive-gold);
+      }
+
+      /* Firefox Scrollbar */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #C5D3D9 transparent;
+      }
+      
+      .dark * {
+        scrollbar-color: rgba(255,255,255,0.15) transparent;
+      }
+
+      /* React Calendar Overrides */
+      .react-calendar {
+        width: 100% !important;
+        background: transparent !important;
+        border: none !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+      }
+      
+      .react-calendar__navigation {
+        display: flex;
+        margin-bottom: 1.5rem;
+        align-items: center;
+      }
+      
+      .react-calendar__navigation button {
+        color: var(--hive-blue);
+        min-width: 40px;
+        background: none;
+        font-size: 1.25rem;
+        font-weight: bold;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+      }
+      
+      .dark .react-calendar__navigation button {
+        color: white;
+      }
+
+      .react-calendar__navigation button:enabled:hover,
+      .react-calendar__navigation button:enabled:focus {
+        background-color: rgba(255, 170, 13, 0.1) !important;
+      }
+
+      .react-calendar__month-view__weekdays {
+        text-align: center;
+        text-transform: uppercase;
+        font-weight: 800;
+        font-size: 0.7em;
+        letter-spacing: 0.1em;
+        color: #9CA3AF;
+        margin-bottom: 1rem;
+      }
+
+      .react-calendar__month-view__days__day {
+        padding: 0 !important;
+        height: 48px !important;
+        width: 48px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        border-radius: 0.75rem !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        margin-bottom: 0.25rem !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative;
+        z-index: 1;
+      }
+
+      .react-calendar__tile {
+        background: transparent !important;
+        color: inherit !important;
+      }
+
+      .react-calendar__tile:enabled:hover,
+      .react-calendar__tile:enabled:focus {
+        background: rgba(255, 170, 13, 0.15) !important;
+        color: var(--hive-gold) !important;
+      }
+
+      .react-calendar__tile--now {
+        background: transparent !important;
+        color: var(--hive-gold) !important;
+        font-weight: 900 !important;
+      }
+      .react-calendar__tile--now::after {
+        content: '';
+        position: absolute;
+        bottom: 6px;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background-color: var(--hive-gold);
+      }
+
+      .react-calendar__tile--active {
+        background: var(--hive-blue) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(3, 10, 55, 0.2);
+      }
+
+      .dark .react-calendar__tile--active {
+        background: var(--hive-gold) !important;
+        color: var(--hive-blue) !important;
+        box-shadow: 0 4px 12px rgba(255, 170, 13, 0.3);
+      }
+
+      .react-calendar__month-view__days__day--neighboringMonth {
+        color: #D1D5DB !important;
+      }
+      .dark .react-calendar__month-view__days__day--neighboringMonth {
+        color: #4B5563 !important;
+      }
+
+      /* Utilities */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+
+  <link rel="stylesheet" href="/index.css">
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+    "framer-motion": "https://esm.sh/framer-motion@11.11.17?deps=react@18.3.1,react-dom@18.3.1",
+    "clsx": "https://esm.sh/clsx@2.1.1",
+    "tailwind-merge": "https://esm.sh/tailwind-merge@2.5.4",
+    "class-variance-authority": "https://esm.sh/class-variance-authority@0.7.0",
+    "react-calendar": "https://esm.sh/react-calendar@5.0.0?deps=react@18.3.1,react-dom@18.3.1",
+    "lucide-react": "https://esm.sh/lucide-react@0.363.0?deps=react@18.3.1",
+    "date-fns": "https://esm.sh/date-fns@3.3.1",
+    "react-day-picker": "https://esm.sh/react-day-picker@8.10.0?deps=react@18.3.1,date-fns@3.3.1",
+    "@motionone/utils": "https://esm.sh/@motionone/utils@10.18.0",
+    "@radix-ui/react-accordion": "https://esm.sh/@radix-ui/react-accordion@1.2.0?deps=react@18.3.1,react-dom@18.3.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/frontend-sample/assets/index-CWdeM-z7.js"></script>
+</head>
+  <body>
+    <div id="root"></div>
+</body>
+</html>

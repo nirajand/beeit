@@ -1,0 +1,16 @@
+[36mvite v6.4.1 [32mbuilding for development...[36m[39m
+
+/index.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+transforming...
+[32m✓[39m 2750 modules transformed.
+[33mcomponents/FloatingBee.tsx (409:30): Use of eval in "components/FloatingBee.tsx" is strongly discouraged as it poses security risks and may cause issues with minification.[39m
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                [39m[1m[2m 15.26 kB[22m[1m[22m[2m │ gzip:   3.66 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex-D1XtliqX.js  [39m[1m[33m846.72 kB[39m[22m[2m │ gzip: 222.34 kB[22m
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 3.24s[39m

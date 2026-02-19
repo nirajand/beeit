@@ -1,0 +1,21 @@
+{
+  "name": "BEE-IT HIVE | Gandaki University",
+  "short_name": "BEE-IT HIVE",
+  "description": "Tech Minds, Future Finds - The digital hub for IT students at Gandaki University.",
+  "icons": [
+    {
+      "src": "assets/favicons/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/favicons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#030A37",
+  "background_color": "#030A37",
+  "display": "standalone",
+  "start_url": "/"
+}
