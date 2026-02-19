@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - BEE-IT HIVE
+name: BEE-IT HIVE Sample Site Production Deployment Pipeline
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   orchestrate-deployment:
@@ -20,46 +22,71 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js Environment
+      - name: Initialize Environment
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
 
-      - name: Initialize Environment & Logs
+      - name: Cleanup & Branch Preparation
+        run: |
+          echo "Process: Terminating existing deploy branch"
+          git config --global user.name "BEE-IT HIVE Automation"
+          git config --global user.email "bee-it.hive@gandakiuniversity.edu.np"
+          
+          # Delete remote deploy branch if it exists
+          git push origin --delete deploy || echo "Branch deploy does not exist on remote"
+          
+          # Create fresh local deploy branch
+          git checkout -b deploy
+        shell: bash
+
+      - name: Infrastructure Setup & Telemetry
         run: |
           mkdir -p logs
-          echo "Build initialized at $(date)" > logs/system.log
-          echo "Node version: $(node -v)" >> logs/system.log
-          echo "NPM version: $(npm -v)" >> logs/system.log
-        shell: bash
-
-      - name: Install Dependencies
-        run: |
+          echo "Timestamp: $(date)" > logs/install_telemetry.log
+          echo "Node Version: $(node -v)" >> logs/install_telemetry.log
+          
           echo "Process: Installing dependencies..."
-          npm install >> logs/install.log 2>&1
+          npm install >> logs/install_telemetry.log 2>&1
         shell: bash
 
-      - name: Development Build Test
+      - name: Development & Build Validation
         run: |
-          echo "Process: Running Development Validation..."
-          # Running a trial build in development mode to check for syntax/lint errors
-          NODE_ENV=development npm run build >> logs/dev-test.log 2>&1
+          echo "Process: Running development build test..."
+          # Validates that the vite config and entry points are functional
+          npx vite build --mode development >> logs/dev_test_telemetry.log 2>&1
         shell: bash
 
-      - name: Production Build & Telemetry
+      - name: Production Build & Component Compilation
         run: |
-          echo "Process: Executing Production Build..."
-          NODE_ENV=production npm run build >> logs/production-build.log 2>&1
-          echo "Telemetry: Mapping distribution structure..."
-          ls -R dist/ > logs/structure.log
+          echo "Process: Initiating final production compilation..."
+          npm run build >> logs/production_build.log 2>&1
+          
+          echo "Process: Generating File Tree Telemetry..."
+          ls -R dist/ > logs/structure_telemetry.log
         shell: bash
 
-      - name: Sync and Deploy to Clean Branch
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Vite GitHub Pages Deployer
+        uses: skywarth/vite-github-pages-deployer@v1.5.0
         with:
-          branch: deploy
-          folder: . 
-          clean: true
-          single-commit: true
-          commit-message: "deploy: production build and telemetry logs [skip ci]"
+          build_path: ./dist
+          package_manager: npm
+          artifact_name: github-pages
+          debug_mode: true
+
+      - name: Finalize Deploy Branch & Logs
+        run: |
+          # Move logs into the deployment context
+          cp -r logs/ dist/logs/
+          
+          # Force push the build and logs to the fresh deploy branch
+          cd dist
+          git init
+          git config --global user.name "BEE-IT HIVE Automation"
+          git config --global user.email "bee-it.hive@gandakiuniversity.edu.np"
+          git checkout -b deploy
+          git add .
+          git commit -m "deploy: production build with full telemetry [skip ci]"
+          git push --force "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" deploy
+        shell: bash
