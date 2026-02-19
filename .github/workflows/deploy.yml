@@ -28,21 +28,21 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          echo "Process: Installing dependencies using legacy-peer-deps"
+          echo "Starting dependency installation with legacy-peer-deps..."
           npm install --legacy-peer-deps
         shell: bash
 
       - name: Execute Production Build
         run: |
-          echo "Process: Running Vite build sequence"
+          echo "Initiating Vite production build..."
           npm run build
         shell: bash
 
-      - name: Deploy Build to Existing Branch
+      - name: Deploy to Branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: deploy
           folder: dist
           clean: true
           single-commit: true
-          commit-message: "deploy: build update from main branch"
+          commit-message: "chore: automated deployment update [skip ci]"
