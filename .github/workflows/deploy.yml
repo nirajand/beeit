@@ -8,80 +8,62 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
-  build:
-    name: Build and Compile
+  build-and-test:
+    name: Build & Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      build_status: ${{ job.status }}
-    
-    steps:
-      - name: Checkout Source
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js Environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Dependency Telemetry
-        run: |
-          echo "System: Checking Node/NPM versions..."
-          node -v
-          npm -v
-          echo "Process: Installing dependencies..."
-          npm install
-        shell: bash
-
-      - name: Build Telemetry
-        run: |
-          echo "Process: Starting Vite Production Build..."
-          npm run build
-          echo "Verification: Checking dist directory content..."
-          ls -R dist/
-        shell: bash
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-assets
-          path: dist/
-          retention-days: 1
-
-  deploy:
-    name: Deploy to Branch
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        node-version: [18, 20, 22, 24]
     
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download Build Artifact
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Environment Telemetry
+        run: |
+          echo "Node Version: $(node -v)"
+          echo "NPM Version: $(npm -v)"
+
+      - name: Vite Github Pages Deployer
+        uses: skywarth/vite-github-pages-deployer@v1.5.0
+        with:
+          public_base_path: /
+          build_path: ./dist
+          install_phase_node_env: dev
+          build_phase_node_env: production
+          package_manager: npm
+          artifact_name: github-pages-${{ matrix.node-version }}
+          debug_mode: true
+          working_path: ./
+
+  deploy:
+    name: Production Deployment
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Download Node 24 Artifact
         uses: actions/download-artifact@v4
         with:
-          name: production-assets
+          name: github-pages-24
           path: dist/
 
-      - name: Push to Deploy Branch
+      - name: Deploy to Branch
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: deploy
           folder: dist
           clean: true
           single-commit: true
-          commit-message: "chore: deployment update [skip ci]"
-          git-config-name: "BEE-IT HIVE Automation"
-          git-config-email: "bee-it.hive@gandakiuniversity.edu.np"
-
-      - name: Deployment Success Telemetry
-        run: |
-          echo "Status: Deployment to 'deploy' branch completed successfully."
-          echo "Timestamp: $(date)"
-        shell: bash
+          commit-message: "chore: multi-node verified deployment [skip ci]"
