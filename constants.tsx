@@ -1,8 +1,7 @@
 
 import { TimelineMilestone, EventType, HiveEvent, Member, GalleryAlbum, Cinematic, Yearbook, Article } from './types';
 
-export const LOGO_URL = "https://gandakiuniversityedunp-my.sharepoint.com/:i:/g/personal/bee-it_hive_gandakiuniversity_edu_np/IQCdtVW9Aq3_TZ0b4tA21r72AYRya-bRMuQPbHjBNqxtwfw?e=j3hETo&download=1";
-
+export const LOGO_URL = "assets/bee-it-upscaled-transparent.png";
 export const COLORS = {
   primary: '#030A37', // Tech Blue
   accent: '#FFAA0D',  // BEE-IT Gold
